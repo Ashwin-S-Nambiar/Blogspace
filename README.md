@@ -1,6 +1,6 @@
 # 🖥️ BlogSpace
 
-Live: https://blogspace-chi.vercel.app/
+**Live: https://blogspace-chi.vercel.app/**
 
 ***A website to display the blogs as well as write blogs in a given manner.***
 
