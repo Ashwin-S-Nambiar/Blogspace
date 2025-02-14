@@ -1,14 +1,66 @@
-# 🖥️ BlogSpace
+# BlogSpace 🖥️
 
-**Live: https://blogspace-chi.vercel.app/**
+<div align="center">
 
-***A website to display the blogs as well as write blogs in a given manner.***
+![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
+![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
 
-## ⚒️ Built with:
-- HTML 5
-- CSS 3
-- JavaScript
+A website to display and write blogs.
 
-## 📷 Screenshots:
+[Features](#-features) • [Tech Stack](#-tech-stack) • [Screenshots](#-screenshots) • [Live](#-live)
 
-![blogspace-chi vercel app_](https://github.com/user-attachments/assets/c5419096-0a0c-4192-b6c7-8aa7cf0ed96d)
+</div>
+
+## ✨ Features
+
+- **Blog Display:** Showcases blogs in a user-friendly format.
+- **Blog Writing:**  Provides a platform for users to create and publish their own blogs.
+- *(Add more features as applicable)*
+
+## 🛠 Tech Stack
+
+- **HTML 5:**  For structuring the content and layout.
+- **CSS 3:** For styling and visual presentation.
+- **JavaScript:** For interactivity and dynamic functionality.
+
+## 📸 Screenshots
+
+<div align="center">
+
+### **Landing Page**
+![InitialPage](./assets/screenshots/BlogSpace-1.png)
+
+### **Full Interface**
+![InitialPage](./assets/screenshots/BlogSpace-Full.png)
+
+### **Footer**
+![InitialPage](./assets/screenshots/BlogSpace-2.png)
+
+### **Publish Post**
+![InitialPage](./assets/screenshots/BlogSpace-3.png)
+
+### **Post Validation**
+![InitialPage](./assets/screenshots/BlogSpace-4.png)
+
+### **Writing a Post**
+![InitialPage](./assets/screenshots/BlogSpace-5.png)
+
+### **New Post Added**
+![InitialPage](./assets/screenshots/BlogSpace-6.png)
+
+</div>
+
+## 🌍 Live
+
+<div align="center">
+
+[![Visit Site](https://img.shields.io/badge/Visit_Site-000?style=for-the-badge&logo=vercel&logoColor=white)](https://blogspace-chi.vercel.app/)
+
+</div>
+
+---
+
+<div align="center">
+Made with ❤️ Ashwin S Nambiar
+</div>
