@@ -62,5 +62,5 @@ A website to display and write blogs.
 ---
 
 <div align="center">
-Made with ❤️ Ashwin S Nambiar
+Made with ❤️ by Ashwin S Nambiar
 </div>
