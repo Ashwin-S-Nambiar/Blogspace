@@ -1,4 +1,4 @@
-# BlogSpace 🖥️
+# BlogSpace
 
 <div align="center">
 
@@ -12,18 +12,18 @@ A website to display and write blogs.
 
 </div>
 
-## ✨ Features
+## Features
 
 - **Blog Display:** Showcases blogs in a user-friendly format.
 - **Blog Writing:**  Provides a platform for users to create and publish their own blogs.
 
-## 🛠 Tech Stack
+## Tech Stack
 
 - **HTML 5:**  For structuring the content and layout.
 - **CSS 3:** For styling and visual presentation.
 - **JavaScript:** For interactivity and dynamic functionality.
 
-## 🚀 Installation
+## Installation
 
 1. **Clone the Repository:**
 
@@ -37,7 +37,7 @@ A website to display and write blogs.
 
       **Simply open the `index.html` file in your web browser.  No further setup is required.**
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Here's how you can help improve BlogSpace:
 
@@ -61,7 +61,7 @@ Contributions are welcome! Here's how you can help improve BlogSpace:
 
 5.  **Open a Pull Request**
 
-## 📸 Screenshots
+## Screenshots
 
 <div align="center">
 
@@ -88,7 +88,7 @@ Contributions are welcome! Here's how you can help improve BlogSpace:
 
 </div>
 
-## 🌍 Live
+## Live
 
 <div align="center">
 
@@ -96,7 +96,7 @@ Contributions are welcome! Here's how you can help improve BlogSpace:
 
 </div>
 
-## 👤 Author
+## Author
 
 ### Ashwin S Nambiar
 - Portfolio: [ashwin.co.in](https://ashwin.co.in)
