@@ -1937,6 +1937,7 @@ html.ready #root {
 }
 
 .sheet {
+  margin: auto;
   width: min(460px, calc(100% - 32px));
   max-height: calc(100dvh - 48px);
   padding: 0;
