@@ -754,6 +754,11 @@ html.ready #root {
   }
 }
 
+.vt .cover::after {
+  opacity: 0;
+  transition: none;
+}
+
 .meta {
   display: flex;
   gap: 8px;
@@ -2058,37 +2063,17 @@ kbd {
   }
 }
 
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation-duration: 220ms;
-  animation-timing-function: var(--out);
-}
-
-::view-transition-new(root) {
-  animation-name: vt-in;
-}
-
 ::view-transition-old(root) {
-  animation-name: vt-out;
-  animation-duration: 140ms;
-  animation-timing-function: ease-in;
+  animation: vt-out 180ms ease-in both;
 }
 
-html[data-dir="back"]::view-transition-new(root) {
-  animation-name: vt-in-back;
+::view-transition-new(root) {
+  animation: vt-in 300ms var(--out) both;
 }
 
 @keyframes vt-in {
   from {
     opacity: 0;
-    transform: translateY(10px);
-  }
-}
-
-@keyframes vt-in-back {
-  from {
-    opacity: 0;
-    transform: translateY(-6px);
   }
 }
 
@@ -2099,8 +2084,9 @@ html[data-dir="back"]::view-transition-new(root) {
 }
 
 ::view-transition-group(hero),
+::view-transition-group(hero-title),
 ::view-transition-group(mast) {
-  animation-duration: 400ms;
+  animation-duration: 420ms;
   animation-timing-function: var(--drawer);
 }
 
@@ -2108,7 +2094,17 @@ html[data-dir="back"]::view-transition-new(root) {
 ::view-transition-new(hero) {
   height: 100%;
   object-fit: cover;
-  animation-duration: 400ms;
+  animation-duration: 420ms;
+}
+
+::view-transition-old(hero-title),
+::view-transition-new(hero-title) {
+  width: auto;
+  height: 100%;
+  object-fit: contain;
+  object-position: left top;
+  animation-duration: 420ms;
+  animation-timing-function: var(--out);
 }
 
 ::view-transition-old(mast),

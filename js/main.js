@@ -225,31 +225,61 @@ function cleanTags(list) {
   return [...new Set(list.map(cleanTag).filter(Boolean))].slice(0, 5);
 }
 
-function swap(update, { hero = null, dir = 'fwd' } = {}) {
+function nameHero(scope) {
+  if (!scope) return;
+  const cover = scope.querySelector('.cover');
+  const title = scope.querySelector('.card-title, .reader-title');
+  if (cover) cover.style.viewTransitionName = 'hero';
+  if (title) title.style.viewTransitionName = 'hero-title';
+}
+
+function swap(update, { hero = null } = {}) {
   const run = () => {
     state.cleanup?.();
     state.cleanup = null;
     update();
+    const landing = hero && $('.reader');
+    if (landing && !landing.contains(hero)) nameHero(landing.querySelector('.reader-grid'));
   };
   if (!document.startViewTransition || reduced.matches || !root.classList.contains('ready')) {
     run();
     return;
   }
-  root.dataset.dir = dir;
-  if (hero) hero.style.viewTransitionName = 'hero';
+  root.classList.add('vt');
+  nameHero(hero);
   const t = document.startViewTransition(run);
   t.finished.finally(() => {
-    delete root.dataset.dir;
+    root.classList.remove('vt');
     for (const el of $$('[style*="view-transition-name"]')) el.style.viewTransitionName = '';
   });
 }
 
-function navigate(url, { replace = false, data = null, hero = null, dir = 'fwd' } = {}) {
+function navigate(url, { replace = false, data = null, hero = null } = {}) {
   if (!replace) rememberScroll();
   const next = new URL(url, location.href);
   if (next.href === location.href && !replace) return;
   history[replace ? 'replaceState' : 'pushState'](data, '', next);
-  swap(route, { hero, dir });
+  swap(route, { hero });
+}
+
+function entry(href) {
+  const cur = history.state;
+  const chain = $('.reader') && href.startsWith('/?post');
+  const depth = chain ? (cur?.depth ? cur.depth + 1 : 0) : 1;
+  const here = location.pathname + location.search;
+  return { from: 'app', depth, prev: here, origin: chain ? cur?.origin : here };
+}
+
+function backLabel() {
+  const st = history.state;
+  if (!st?.depth || !st.origin) return 'All posts';
+  const q = new URLSearchParams(st.origin.split('?')[1] || '');
+  if (q.has('post')) return 'Back';
+  if (q.get('tab') === 'drafts') return 'Drafts';
+  if (q.get('tab') === 'yours') return 'Your posts';
+  if (q.get('q')) return 'Search';
+  if (q.get('tag')) return `#${q.get('tag')}`;
+  return 'All posts';
 }
 
 function rememberScroll() {
@@ -259,10 +289,7 @@ function rememberScroll() {
 addEventListener('popstate', () => {
   const leaving = $('.reader');
   if (leaving) state.heroId = leaving.dataset.id;
-  swap(() => route(true), {
-    dir: 'back',
-    hero: leaving ? $('.reader .cover') : null,
-  });
+  swap(() => route(true), { hero: leaving ? $('.reader .reader-grid') : null });
 });
 
 function route(restoring = false) {
@@ -417,9 +444,9 @@ function home(q, restoring) {
   if (saved) scrollTo(0, saved.y);
   else scrollTo(0, 0);
   if (state.heroId != null) {
-    const el = $(`.card[data-id="${CSS.escape(String(state.heroId))}"] .cover`);
-    const r = el?.getBoundingClientRect();
-    if (el && r.bottom > 0 && r.top < innerHeight) el.style.viewTransitionName = 'hero';
+    const el = $(`.card[data-id="${CSS.escape(String(state.heroId))}"] .card-link`);
+    const r = el?.querySelector('.cover').getBoundingClientRect();
+    if (el && r.bottom > 0 && r.top < innerHeight) nameHero(el);
     state.heroId = null;
   }
   requestAnimationFrame(() => {
@@ -437,7 +464,7 @@ function home(q, restoring) {
       clearTimeout(t);
       t = setTimeout(() => {
         s.q = input.value;
-        history.replaceState(null, '', homeUrl(s));
+        history.replaceState(history.state, '', homeUrl(s));
         setTitle(s.tag ? `#${s.tag}` : s.q ? 'Search' : '');
         fillRack(s);
       }, 120);
@@ -452,7 +479,7 @@ function home(q, restoring) {
   }
   $('#sort')?.addEventListener('change', (e) => {
     s.sort = e.target.value;
-    history.replaceState(null, '', homeUrl(s));
+    history.replaceState(history.state, '', homeUrl(s));
     fillRack(s);
   });
   $('#import')?.addEventListener('change', importFiles);
@@ -631,7 +658,7 @@ function reader(id) {
       ? `<a class="pager-${dirn}" href="/?post=${p2.id}" data-link data-pager="${dirn}"><span class="pager-k">${dirn === 'prev' ? `${icon('prev')} Previous` : `Next ${icon('next')}`}</span><span class="pager-t">${esc(p2.title)}</span></a>`
       : '<span></span>';
   view.innerHTML = `<article class="reader" data-id="${esc(x.id)}">
-    <a class="back" href="/" data-link data-back>${icon('back')}<span>All posts</span></a>
+    <a class="back" href="/" data-link data-back>${icon('back')}<span>${esc(backLabel())}</span></a>
     <div class="reader-grid">
       <div class="reader-side">
         ${cover(x.id, x.title, { label: x.mine ? 'Yours' : '', printing })}
@@ -750,7 +777,8 @@ function printRun() {
       if (e.target.classList.contains('pass-b')) el.classList.remove('printing');
     });
   }
-  history.replaceState({ from: 'app' }, '', location.href);
+  const { printed, ...rest } = history.state || {};
+  history.replaceState(printed ? rest : history.state, '', location.href);
 }
 
 function writer(id) {
@@ -784,7 +812,7 @@ function writer(id) {
   const popular = tagCounts().map(([t]) => t);
   view.innerHTML = `<form class="writer" id="writer" novalidate data-pane="write">
     <div class="writer-head">
-      <a class="back" href="${editing ? `/?post=${source.id}` : '/?tab=drafts'}" data-link data-back>${icon('back')}<span>${editing ? 'Back to post' : 'Drafts'}</span></a>
+      <a class="back" href="${editing ? `/?post=${source.id}` : '/?tab=drafts'}" data-link data-back>${icon('back')}<span>${editing ? 'Back to post' : history.state?.depth ? 'Back' : 'Drafts'}</span></a>
       <div class="panes" role="tablist" aria-label="View">
         <button type="button" role="tab" data-pane="write" aria-selected="true">Write</button>
         <button type="button" role="tab" data-pane="proof" aria-selected="false">Proof</button>
@@ -938,7 +966,7 @@ function writer(id) {
     store.putDraft(d);
     if (!saved) {
       saved = true;
-      if (!editing) history.replaceState(null, '', `/?edit=${d.id}`);
+      if (!editing) history.replaceState(history.state, '', `/?edit=${d.id}`);
     }
     setStatus(editing ? 'Changes saved as a draft' : 'Draft saved');
   }
@@ -1069,11 +1097,12 @@ function writer(id) {
     const { post, edited } = store.publish(d, state.total);
     left = true;
     state.context = [];
-    navigate(`/?post=${post.id}`, {
-      replace: true,
-      data: edited ? null : { printed: post.id },
-      dir: 'fwd',
-    });
+    if (edited && history.state?.prev === `/?post=${post.id}`) history.back();
+    else
+      navigate(`/?post=${post.id}`, {
+        replace: true,
+        data: { ...history.state, ...(edited ? {} : { printed: post.id }) },
+      });
     toast(edited ? 'Updated' : 'Published. It’s kept on this device.');
     if (edited) sfx.copy();
   });
@@ -1233,7 +1262,7 @@ function deletePost(id) {
   if (!removed) return;
   sfx.remove();
   haptic(10);
-  navigate('/?tab=yours', { replace: true, dir: 'back' });
+  navigate('/?tab=yours', { replace: true });
   toast('Post deleted', {
     action: 'Undo',
     onAction: () => {
@@ -1320,7 +1349,7 @@ document.addEventListener('click', (e) => {
       state.cleanup = null;
       store.dropDraft(id);
       sfx.remove();
-      navigate('/?tab=drafts', { replace: true, dir: 'back' });
+      navigate('/?tab=drafts', { replace: true });
       toast('Draft deleted', {
         action: 'Undo',
         onAction: () => {
@@ -1335,22 +1364,18 @@ document.addEventListener('click', (e) => {
   if (!link || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
   e.preventDefault();
   const href = link.getAttribute('href');
-  if (link.dataset.back != null && history.state?.from === 'app') {
-    history.back();
+  if (link.dataset.back != null && history.state?.depth) {
+    history.go(-history.state.depth);
     return;
   }
   let hero = null;
-  if (link.dataset.post) hero = link.querySelector('.cover');
+  if (link.dataset.post && !link.dataset.pager) hero = link;
   const here = $('.reader');
   if (here && !link.dataset.pager && !href.startsWith('/?post') && !href.startsWith('/?edit')) {
     state.heroId = here.dataset.id;
-    hero = $('.reader .cover');
+    hero = $('.reader .reader-grid');
   }
-  navigate(href, {
-    hero,
-    data: { from: 'app' },
-    dir: link.dataset.back != null || link.dataset.pager === 'prev' ? 'back' : 'fwd',
-  });
+  navigate(href, { hero, data: entry(href) });
 });
 
 document.addEventListener('pointerdown', (e) => {
@@ -1380,7 +1405,7 @@ document.addEventListener('keydown', (e) => {
   const k = e.key;
   if (k === 'n' || k === 'N') {
     e.preventDefault();
-    if (!q.has('write') && !q.has('edit')) navigate('/?write', { data: { from: 'app' } });
+    if (!q.has('write') && !q.has('edit')) navigate('/?write', { data: entry('/?write') });
   } else if (k === '/') {
     const input = $('#q');
     if (input) {
@@ -1522,6 +1547,7 @@ function reveal() {
   root.classList.add('ready');
 }
 
+history.scrollRestoration = 'manual';
 const cachedAtStart = api.cachedFeed();
 if (cachedAtStart) {
   state.feed = cachedAtStart.posts;
