@@ -1,5 +1,4 @@
-.post-head,
-.post-body {
+.post-head {
   display: grid;
   grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
   column-gap: clamp(32px, 5vw, 72px);
@@ -74,41 +73,167 @@
   text-wrap: pretty;
 }
 
+.post-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  column-gap: clamp(32px, 5vw, 72px);
+  margin-top: clamp(48px, 6vw, 80px);
+}
+
+.rail {
+  min-width: 0;
+}
+
+.rail-in {
+  position: sticky;
+  top: 28px;
+  display: grid;
+  gap: 18px;
+  padding-left: 22px;
+}
+
+.rail-label {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.toc {
+  display: grid;
+  padding: 0;
+  list-style: none;
+  counter-reset: none;
+}
+
+.toc li {
+  border-top: 1px solid var(--rule);
+}
+
+.toc li:last-child {
+  border-bottom: 1px solid var(--rule);
+}
+
+.toc a {
+  display: grid;
+  grid-template-columns: 2.4ch 1fr;
+  gap: 14px;
+  align-items: baseline;
+  padding: 9px 0;
+  font-family: var(--display);
+  font-weight: 700;
+  font-stretch: 76%;
+  font-size: 20px;
+  line-height: 1.1;
+  color: var(--ink-2);
+  text-decoration: none;
+  transition: color 160ms ease;
+}
+
+.toc-n {
+  font-weight: 850;
+  font-stretch: 62%;
+  font-size: 1.3em;
+  line-height: 0.8;
+  color: var(--pink);
+  font-variant-numeric: tabular-nums;
+}
+
+.toc-t {
+  justify-self: start;
+  padding: 1px 4px 2px;
+  margin-left: -4px;
+  border-radius: 2px;
+  transition: background-color 180ms ease;
+}
+
+.toc a[aria-current] {
+  color: var(--ink-deep);
+}
+
+.toc a[aria-current] .toc-t {
+  background: var(--pink-tint);
+}
+
+.rail-progress {
+  position: absolute;
+  top: 2px;
+  bottom: 0;
+  left: 0;
+  width: 3px;
+  background: var(--rule);
+}
+
+.rail-progress span {
+  display: block;
+  height: 100%;
+  background: var(--ink);
+  transform: scaleY(0);
+  transform-origin: top;
+}
+
+.rail-meta {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .toc a:hover {
+    color: var(--ink-deep);
+  }
+
+  .toc a:not([aria-current]):hover .toc-t {
+    background: var(--hover);
+  }
+}
+
 .post-body {
-  margin-top: clamp(40px, 5vw, 64px);
-  row-gap: 0;
+  min-width: 0;
+  max-width: 700px;
   font-size: 19px;
   line-height: 1.65;
   text-wrap: pretty;
   overflow-wrap: break-word;
-}
-
-.post-body > * {
-  grid-column: 2;
-  min-width: 0;
-  max-width: 680px;
+  counter-reset: fig;
 }
 
 .post-body > * + * {
   margin-top: 0.9em;
 }
 
-.post-body > .wide {
-  grid-column: 1 / -1;
-  max-width: none;
-  margin-block: 2.2em;
+.post-body > .fig {
+  margin-block: 2em;
 }
 
-.post-body > .wide + * {
+.post-body > .fig + * {
   margin-top: 0;
 }
 
 .post-body > .aside {
-  grid-column: 1;
-  grid-row: span 2;
-  max-width: 340px;
-  justify-self: end;
-  margin-top: 0.35em;
+  margin-block: 1.4em;
+}
+
+.fig {
+  position: relative;
+  padding: 12px;
+  border-radius: 3px;
+  background: var(--sheet);
+  box-shadow: inset 0 0 0 1px var(--rule);
+  counter-increment: fig;
+}
+
+.fig::before {
+  content: "Fig. " counter(fig, decimal-leading-zero);
+  display: block;
+  margin: -2px 0 10px;
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--pink-ink);
+}
+
+.fig.narrow {
+  max-width: 520px;
 }
 
 .post-body > p:first-of-type::first-letter {
@@ -282,36 +407,48 @@
 
 @media (max-width: 1023px) {
   .post-head,
-  .post-body,
+  .post-layout,
   .post-foot {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .post-layout {
+    margin-top: 40px;
+  }
+
+  .rail-in {
+    position: static;
+    max-width: 700px;
+    margin-bottom: 40px;
+    padding-left: 0;
+  }
+
+  .rail-progress,
+  .rail-meta {
+    display: none;
   }
 
   .post-head {
     gap: 24px;
   }
 
-  .post-body > *,
-  .post-body > .aside,
   .post-foot > * {
     grid-column: 1;
-  }
-
-  .post-body > .aside {
-    grid-row: auto;
-    justify-self: stretch;
-    max-width: 680px;
-    margin-block: 1.2em 0.4em;
-  }
-
-  .post-body > .wide {
-    margin-block: 1.8em;
   }
 }
 
 @media (max-width: 599px) {
   .post-body {
     font-size: 18px;
+  }
+
+  .post-body > .fig {
+    margin-inline: calc(-1 * var(--gutter));
+    padding: 12px var(--gutter);
+    border-radius: 0;
+    box-shadow:
+      inset 0 1px 0 var(--rule),
+      inset 0 -1px 0 var(--rule);
   }
 
   .post-body pre {

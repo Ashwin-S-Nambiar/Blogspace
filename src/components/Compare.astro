@@ -15,14 +15,14 @@ interface Props {
 
 const { before, after, beforeAlt, afterAlt, beforeLabel, afterLabel, caption, start = 50 } =
   Astro.props;
-const sizes = '(min-width: 1400px) 1320px, calc(100vw - 32px)';
+const sizes = '(max-width: 719px) calc(100vw - 32px), 700px';
 ---
 
-<figure class="fig compare wide">
+<figure class="fig compare">
   <div class="cmp" style={{ '--pos': `${start}%` }} data-compare>
-    <Picture src={after} alt={afterAlt} formats={['avif', 'webp']} fallbackFormat="webp" widths={[640, 960, 1320, 1920]} sizes={sizes} />
+    <Picture src={after} alt={afterAlt} formats={['avif', 'webp']} fallbackFormat="webp" widths={[700, 1060, 1400]} sizes={sizes} />
     <div class="before">
-      <Picture src={before} alt={beforeAlt} formats={['avif', 'webp']} fallbackFormat="webp" widths={[640, 960, 1320, 1920]} sizes={sizes} />
+      <Picture src={before} alt={beforeAlt} formats={['avif', 'webp']} fallbackFormat="webp" widths={[700, 1060, 1400]} sizes={sizes} />
     </div>
     <span class="handle" aria-hidden="true"></span>
     <span class="lab lab-b" aria-hidden="true">{beforeLabel}</span>
@@ -50,7 +50,8 @@ const sizes = '(min-width: 1400px) 1320px, calc(100vw - 32px)';
   .cmp {
     position: relative;
     overflow: hidden;
-    box-shadow: 0 0 0 1.5px var(--ink);
+    border-radius: 2px;
+    box-shadow: 0 0 0 1px var(--rule);
     touch-action: pan-y;
   }
 
@@ -136,6 +137,8 @@ const sizes = '(min-width: 1400px) 1320px, calc(100vw - 32px)';
 
   .cap {
     margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid var(--rule);
     font-family: var(--mono);
     font-size: 12px;
     color: var(--ink-2);

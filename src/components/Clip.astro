@@ -26,9 +26,10 @@ const { src, poster, label, length, cues = [], caption, narrow = false } = Astro
 const still = await getImage({ src: poster, format: 'webp', width: Math.min(poster.width, 1440) });
 const pct = (n: number) => `${n}%`;
 const clock = (s: number) => `0:${String(Math.floor(s)).padStart(2, '0')}`;
+const at = (s: number) => Math.min(100, (s / length) * 100);
 ---
 
-<figure class:list={['fig', 'clip', { wide: !narrow }]} data-clip data-length={length}>
+<figure class:list={['fig', 'clip', { narrow }]} data-clip data-length={length}>
   <div class="stage" style={{ aspectRatio: `${poster.width} / ${poster.height}` }}>
     <video muted playsinline loop preload="none" poster={still.src} aria-label={label}>
       <source src={src} type="video/mp4" />
@@ -50,51 +51,62 @@ const clock = (s: number) => `0:${String(Math.floor(s)).padStart(2, '0')}`;
       ) : null,
     )}
   </div>
-  <div class="bar">
+  <div class="transport">
     <button type="button" class="play" aria-label="Play" data-play>
       <svg class="ic ic-play"><use href="#i-play"></use></svg>
       <svg class="ic ic-pause"><use href="#i-pause"></use></svg>
     </button>
-    <div class="track" aria-hidden="true">
-      {cues.map((c) => (
-        <span class="span" style={{ left: pct((c.from / length) * 100), width: pct(((c.to - c.from) / length) * 100) }} />
+    <div class="track">
+      <span class="rail" aria-hidden="true"><span class="fill"></span></span>
+      {cues.map((c, i) => (
+        <button
+          type="button"
+          class="chapter"
+          data-seek={c.from}
+          data-until={c.to}
+          data-cue={i}
+          style={{ left: pct(at(c.from)), width: pct(at(c.to) - at(c.from)) }}
+          aria-label={`Jump to ${clock(c.from)}: ${c.text}`}
+        >
+          <span class="chip">{i + 1}</span>
+        </button>
       ))}
-      <span class="fill"></span>
     </div>
-    <span class="time" aria-hidden="true">{clock(0)}</span>
+    <span class="time" aria-hidden="true"><b>{clock(0)}</b> / {clock(length)}</span>
   </div>
-  {(cues.length > 0 || caption) && (
-    <figcaption>
-      {cues.length > 0 && (
-        <ol class="cues">
-          {cues.map((c, i) => (
-            <li>
-              <button type="button" data-seek={c.from} data-until={c.to} data-cue={i}>
-                <span class="n" aria-hidden="true">{i + 1}</span>
-                <span class="t">{clock(c.from)}</span>
-                <span>{c.text}</span>
-              </button>
-            </li>
-          ))}
-        </ol>
-      )}
-      {caption && <p class="cap">{caption}</p>}
-    </figcaption>
-  )}
+  <figcaption>
+    {cues.length > 0 && (
+      <div class="now" aria-live="polite">
+        <p class="line" data-rest data-on>
+          <span class="hint">{cues.length} notes. Tap a number on the timeline to jump to one.</span>
+        </p>
+        {cues.map((c, i) => (
+          <p class="line" data-line={i}>
+            <span class="n" aria-hidden="true">{i + 1}</span>
+            <span>{c.text}</span>
+          </p>
+        ))}
+      </div>
+    )}
+    {caption && <p class="cap">{caption}</p>}
+  </figcaption>
 </figure>
 
 <script>
   const still = matchMedia('(prefers-reduced-motion: reduce)');
+  const clock = (t: number) => `0:${String(Math.floor(t)).padStart(2, '0')}`;
 
   for (const fig of document.querySelectorAll<HTMLElement>('[data-clip]')) {
     const video = fig.querySelector('video');
     const play = fig.querySelector<HTMLButtonElement>('[data-play]');
     const fill = fig.querySelector<HTMLElement>('.fill');
-    const time = fig.querySelector<HTMLElement>('.time');
+    const time = fig.querySelector<HTMLElement>('.time b');
     if (!video || !play || !fill || !time) continue;
     const length = Number(fig.dataset.length) || 1;
     const marks = fig.querySelectorAll<HTMLElement>('[data-cue]');
-    const windows = [...fig.querySelectorAll<HTMLElement>('[data-seek]')].map((b) => ({
+    const lines = fig.querySelectorAll<HTMLElement>('[data-line]');
+    const rest = fig.querySelector<HTMLElement>('[data-rest]');
+    const chapters = [...fig.querySelectorAll<HTMLElement>('[data-seek]')].map((b) => ({
       i: b.dataset.cue ?? '',
       from: Number(b.dataset.seek),
       to: Number(b.dataset.until),
@@ -102,17 +114,23 @@ const clock = (s: number) => `0:${String(Math.floor(s)).padStart(2, '0')}`;
     let heldByUser = false;
     let frame = 0;
     let shown = '';
+    let active: string | null = null;
 
     const paint = () => {
       const t = video.currentTime;
       fill.style.transform = `scaleX(${Math.min(1, t / length)})`;
-      const label = `0:${String(Math.floor(t)).padStart(2, '0')}`;
+      const label = clock(t);
       if (label !== shown) {
         time.textContent = label;
         shown = label;
       }
-      const on = new Set(windows.filter((w) => t >= w.from && t < w.to).map((w) => w.i));
-      for (const el of marks) el.classList.toggle('on', on.has(el.dataset.cue ?? ''));
+      const on = chapters.find((c) => t >= c.from && t < c.to)?.i ?? '';
+      if (on !== active) {
+        active = on;
+        for (const el of marks) el.classList.toggle('on', el.dataset.cue === on);
+        for (const el of lines) el.toggleAttribute('data-on', el.dataset.line === on);
+        rest?.toggleAttribute('data-on', on === '');
+      }
       if (!video.paused) frame = requestAnimationFrame(paint);
     };
 
@@ -167,8 +185,9 @@ const clock = (s: number) => `0:${String(Math.floor(s)).padStart(2, '0')}`;
   .stage {
     position: relative;
     overflow: hidden;
-    box-shadow: 0 0 0 1.5px var(--ink);
+    border-radius: 2px;
     background: var(--stock);
+    box-shadow: 0 0 0 1px var(--rule);
   }
 
   video {
@@ -190,14 +209,14 @@ const clock = (s: number) => `0:${String(Math.floor(s)).padStart(2, '0')}`;
     position: absolute;
     display: grid;
     place-items: center;
-    width: 28px;
-    height: 28px;
-    margin: -14px 0 0 -14px;
+    width: 26px;
+    height: 26px;
+    margin: -13px 0 0 -13px;
     border-radius: 50%;
     background: var(--pink);
     color: var(--ink-deep);
     font-family: var(--mono);
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 700;
     box-shadow: 0 0 0 2px var(--stock);
     opacity: 0;
@@ -209,24 +228,23 @@ const clock = (s: number) => `0:${String(Math.floor(s)).padStart(2, '0')}`;
     opacity: 1;
   }
 
-  .bar {
+  .transport {
     display: grid;
-    grid-template-columns: 40px 1fr 5ch;
+    grid-template-columns: 36px minmax(0, 1fr) auto;
     align-items: center;
-    gap: 12px;
-    margin-top: 10px;
+    gap: 14px;
+    margin-top: 12px;
   }
 
   .play {
     display: grid;
     place-items: center;
-    width: 40px;
-    height: 40px;
-    border-radius: 3px;
-    color: var(--ink);
-    transition:
-      background-color 160ms ease,
-      transform 160ms var(--out);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--ink);
+    color: var(--stock);
+    transition: transform 160ms var(--out);
   }
 
   .play:active {
@@ -235,6 +253,8 @@ const clock = (s: number) => `0:${String(Math.floor(s)).padStart(2, '0')}`;
 
   .play .ic {
     grid-area: 1 / 1;
+    width: 15px;
+    height: 15px;
     transition: opacity 140ms ease;
   }
 
@@ -249,15 +269,19 @@ const clock = (s: number) => `0:${String(Math.floor(s)).padStart(2, '0')}`;
 
   .track {
     position: relative;
-    height: 6px;
-    background: var(--rule);
+    height: 30px;
+    margin-left: 10px;
   }
 
-  .span {
+  .rail {
     position: absolute;
-    top: 0;
-    bottom: 0;
-    background: var(--pink-tint);
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 3px;
+    margin-top: -1.5px;
+    background: var(--rule);
+    overflow: hidden;
   }
 
   .fill {
@@ -268,66 +292,110 @@ const clock = (s: number) => `0:${String(Math.floor(s)).padStart(2, '0')}`;
     transform-origin: left;
   }
 
+  .chapter {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    min-width: 12px;
+  }
+
+  .chapter::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 2px;
+    top: 50%;
+    height: 7px;
+    margin-top: -3.5px;
+    border-radius: 1px;
+    background: var(--pink-tint);
+    transition: background-color 160ms ease;
+  }
+
+  .chapter.on::before {
+    background: var(--pink);
+  }
+
+  .chip {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    display: grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border-radius: 50%;
+    background: var(--pink);
+    color: var(--ink-deep);
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+    box-shadow: 0 0 0 2px var(--sheet);
+  }
+
+  .chapter:focus-visible {
+    outline-offset: 2px;
+  }
+
   .time {
     font-family: var(--mono);
     font-size: 12px;
-    color: var(--ink-2);
+    color: var(--ink-3);
     font-variant-numeric: tabular-nums;
-    text-align: right;
+    white-space: nowrap;
+  }
+
+  .time b {
+    font-weight: 500;
+    color: var(--ink);
   }
 
   figcaption {
     display: grid;
-    gap: 12px;
+    gap: 6px;
     margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid var(--rule);
   }
 
-  .cues {
+  .now {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
-    align-items: start;
-    gap: 2px 20px;
-    padding: 0;
-    list-style: none;
   }
 
-  .cues button {
-    display: grid;
-    grid-template-columns: 22px 4ch 1fr;
+  .line {
+    grid-area: 1 / 1;
+    display: flex;
+    align-items: flex-start;
     gap: 10px;
-    align-items: start;
-    width: calc(100% + 16px);
-    padding: 6px 8px;
-    margin: 0 -8px;
-    border-radius: 3px;
+    min-height: 22px;
     font-family: var(--mono);
     font-size: 13px;
-    line-height: 1.5;
-    text-align: left;
-    transition: background-color 160ms ease;
+    line-height: 1.6;
+    color: var(--ink-deep);
+    opacity: 0;
+    transition: opacity 160ms ease;
   }
 
-  .cues button.on {
-    background: var(--pink-tint);
-    color: var(--ink-deep);
+  .line[data-on] {
+    opacity: 1;
+  }
+
+  .hint {
+    color: var(--ink-2);
   }
 
   .n {
     display: grid;
+    flex: none;
     place-items: center;
-    width: 22px;
-    height: 22px;
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
     background: var(--pink);
     color: var(--ink-deep);
     font-size: 11px;
     font-weight: 700;
-    line-height: 1;
-  }
-
-  .t {
-    color: var(--ink-2);
-    font-variant-numeric: tabular-nums;
   }
 
   .cap {
@@ -337,9 +405,8 @@ const clock = (s: number) => `0:${String(Math.floor(s)).padStart(2, '0')}`;
   }
 
   @media (hover: hover) and (pointer: fine) {
-    .play:hover,
-    .cues button:not(.on):hover {
-      background: var(--hover);
+    .chapter:not(.on):hover::before {
+      background: var(--pink);
     }
   }
 

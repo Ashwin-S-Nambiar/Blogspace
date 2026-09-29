@@ -10,25 +10,25 @@ interface Props {
 const { seed, title, caption } = Astro.props;
 ---
 
-<figure class="fig passes wide" data-passes>
+<figure class="fig passes" data-passes>
   <div class="row">
     <div class="step">
       <Cover seed={seed} title={title} only="pink" />
-      <p>The pink pass</p>
+      <p><span class="k">1</span>The pink pass</p>
     </div>
     <div class="step">
       <Cover seed={seed} title={title} only="blue" />
-      <p>The blue pass</p>
+      <p><span class="k">2</span>The blue pass</p>
     </div>
     <div class="step both">
       <Cover seed={seed} title={title} />
-      <p>
-        Both, a little off register
-        <button type="button" data-reprint>Print it again</button>
-      </p>
+      <p><span class="k">=</span>Both, off register</p>
     </div>
   </div>
-  {caption && <figcaption class="cap">{caption}</figcaption>}
+  <figcaption>
+    {caption && <p class="cap">{caption}</p>}
+    <button type="button" class="reprint" data-reprint>Print it again</button>
+  </figcaption>
 </figure>
 
 <script>
@@ -47,43 +47,67 @@ const { seed, title, caption } = Astro.props;
   .row {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: clamp(16px, 3vw, 36px);
+    gap: 14px;
   }
 
   .step {
     display: grid;
-    gap: 10px;
+    gap: 8px;
   }
 
   p {
     display: flex;
-    flex-wrap: wrap;
     align-items: baseline;
-    justify-content: space-between;
-    gap: 4px 12px;
+    gap: 8px;
     font-family: var(--mono);
-    font-size: 13px;
+    font-size: 12px;
     color: var(--ink);
   }
 
-  button {
+  .k {
     color: var(--pink-ink);
-    text-decoration: underline;
-    text-decoration-thickness: 1.5px;
-    text-underline-offset: 3px;
-    border-radius: 2px;
+  }
+
+  figcaption {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 16px;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid var(--rule);
   }
 
   .cap {
-    margin-top: 14px;
+    flex: 1 1 260px;
     font-family: var(--mono);
     font-size: 12px;
     color: var(--ink-2);
   }
 
-  @media (max-width: 599px) {
+  .reprint {
+    height: 32px;
+    padding: 0 12px;
+    border-radius: 3px;
+    background: var(--ink);
+    color: var(--stock);
+    font-family: var(--mono);
+    font-size: 12px;
+    transition: transform 160ms var(--out);
+  }
+
+  .reprint:active {
+    transform: scale(0.97);
+  }
+
+  @media (max-width: 479px) {
     .row {
-      grid-template-columns: minmax(0, 1fr);
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+
+    .both {
+      grid-column: 1 / -1;
     }
   }
 </style>
