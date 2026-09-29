@@ -5,11 +5,21 @@ interface Props {
 }
 
 const { start = 1299, caption } = Astro.props;
+const digits = [...String(start)];
 ---
 
 <figure class="fig odo" data-odo data-start={start}>
   <div class="stage">
-    <div class="readout" aria-hidden="true"></div>
+    <div class="readout" aria-hidden="true">
+      {digits.map((d, i) => (
+        <span class="col" data-key={`p${digits.length - 1 - i}`}>
+          <span class="sizer">{d}</span>
+          <span class="strip" style={`--row: ${Number(d) + 10}`}>
+            {Array.from({ length: 20 }, (_, n) => <span>{n % 10}</span>)}
+          </span>
+        </span>
+      ))}
+    </div>
     <p class="said sr" aria-live="polite">&nbsp;</p>
   </div>
   <div class="keys">
@@ -122,8 +132,19 @@ const { start = 1299, caption } = Astro.props;
       render(prev, value);
     };
 
+    for (const el of readout.querySelectorAll<HTMLElement>('.col')) {
+      const strip = el.querySelector<HTMLElement>('.strip');
+      const sizer = el.querySelector<HTMLElement>('.sizer');
+      if (!strip || !sizer) continue;
+      cols.set(el.dataset.key ?? '', {
+        el,
+        strip,
+        sizer,
+        row: Number(strip.style.getPropertyValue('--row')),
+      });
+    }
     fig.classList.toggle('prop', !rule('tab'));
-    render(value, value);
+    said.textContent = String(value);
 
     for (const b of fig.querySelectorAll<HTMLButtonElement>('[data-step]')) {
       b.addEventListener('click', () => set(value + Number(b.dataset.step)));
