@@ -427,14 +427,6 @@
   }
 }
 
-.facts .facts-name {
-  color: var(--strong);
-  text-decoration: underline;
-  text-decoration-color: var(--ul);
-  text-underline-offset: 3px;
-  transition: text-decoration-color 150ms ease;
-}
-
 .plink {
   display: inline-flex;
   align-items: baseline;
@@ -527,8 +519,7 @@
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .plink:hover,
-  .facts .facts-name:hover {
+  .plink:hover {
     text-decoration-color: var(--muted);
   }
 

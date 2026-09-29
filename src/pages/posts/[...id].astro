@@ -65,7 +65,7 @@ const links = project && [
       {hero && <Hero post={post} hero={hero} />}
       {project && (
         <dl class:list={['facts', { two: !links?.length }]} data-in style="--i:5">
-          <div><dt>Project</dt><dd>{project.live ? <a class="facts-name" href={project.live} rel="noopener">{project.name}</a> : project.name}</dd></div>
+          <div><dt>Project</dt><dd>{project.name}</dd></div>
           {project.stack.length > 0 && <div><dt>Stack</dt><dd>{project.stack.join(', ')}</dd></div>}
           {links && links.length > 0 && (
             <div>
