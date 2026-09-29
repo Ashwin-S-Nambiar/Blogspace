@@ -1,15 +1,15 @@
 <p align="center">
   <a href="https://blogspace.ashwin.co.in">
-    <img src="./og.jpg" width="100%" alt="blogspace: a rack of short posts, each with a two ink halftone cover in blue and fluorescent pink, under a big blue wordmark printed slightly off register over pink">
+    <img src="./public/og.jpg" width="100%" alt="blogspace: a big blue wordmark printed slightly off register over pink, and the first post, reprinting blogspace, with a two ink cover of a pink R and a blue halftone ring">
   </a>
 </p>
 
 <p align="center">
   <a href="https://blogspace.ashwin.co.in"><strong>blogspace.ashwin.co.in</strong></a>
   &nbsp;·&nbsp;
-  <a href="#what-it-does">what it does</a>
+  <a href="#what-it-is">what it is</a>
   &nbsp;·&nbsp;
-  <a href="#the-design">the design</a>
+  <a href="#writing-a-post">writing a post</a>
   &nbsp;·&nbsp;
   <a href="#running-it">running it</a>
 </p>
@@ -17,118 +17,154 @@
 <br>
 
 <p align="center">
-  <img src="./docs/screenshots/BlogSpace.webp" width="100%" alt="the app on desktop: the blogspace wordmark, tabs for all, yours and drafts, a search box, a row of tags, and four posts with generated halftone covers, titles, excerpts, tags and like counts">
+  <img src="./docs/screenshots/BlogSpace.webp" width="100%" alt="the rack on desktop: the blogspace wordmark, a row of tags, and the latest post large, with its two ink cover beside the title and a line about it">
 </p>
 
-the source of **[blogspace.ashwin.co.in](https://blogspace.ashwin.co.in)**, a rack of short reads and a place to write your own. it is printed like a risograph zine: two inks, blue and fluorescent pink, on plain stock, and every post gets its own halftone cover.
+the source of **[blogspace.ashwin.co.in](https://blogspace.ashwin.co.in)**, write-ups on the things i build, printed like a risograph zine: two inks, blue and fluorescent pink, on plain stock, and every post gets its own halftone cover.
 
-the posts, authors and comments come from [dummyjson](https://dummyjson.com/docs/posts). what you write is kept on your device and never sent anywhere.
+it used to be an app: a rack of placeholder posts from dummyjson and a writer that kept yours on your device. the look stays. the posts are real now.
 
-it used to be a form that posted to a fake endpoint and forgot the post on reload, over a feed of latin placeholder text. now it reads 251 real posts and keeps yours.
+## what it is
 
-it is one html file, one stylesheet and a few small modules. no framework and no build step.
-
-## what it does
+each post is the story of a project: why it changed, what went wrong, and the details the project pages leave out. the specs live in [my notes](https://notes.ashwin.co.in) and the release history in [redline](https://redline.ashwin.co.in). this is the story part.
 
 <p align="center">
-  <img src="./docs/screenshots/BlogSpace-2.webp" width="32%" alt="the rack on a phone: one post per row, each with its cover, number, author, read time, title, excerpt and tags">
+  <img src="./docs/screenshots/BlogSpace-5.webp" width="32%" alt="a post on a phone: the cover, the title, the dek in italics, tags, and facts for when it was printed, the project, its stack and links">
   &nbsp;
-  <img src="./docs/screenshots/BlogSpace-3.webp" width="32%" alt="a post on a phone: the cover, the title in big condensed type, the text with a pink drop cap, tags, like, share and save buttons">
+  <img src="./docs/screenshots/BlogSpace-6.webp" width="32%" alt="a clip on a phone with a play button, a progress bar with the noted stretches in pink, and three numbered notes with timestamps under it">
   &nbsp;
-  <img src="./docs/screenshots/BlogSpace-4.webp" width="32%" alt="the writer on a phone: a title, tag chips, suggested tags, a formatting toolbar and the text being written in markdown">
+  <img src="./docs/screenshots/BlogSpace-7.webp" width="32%" alt="an annotated screenshot on a phone, panned to its sixth pin, with that note highlighted in the list under it">
 </p>
 
-- **a rack to browse.** every post as a cover, a number, the author, a read time, the title, an excerpt, its tags and its likes. more load as you scroll.
-- **tags, search and sort.** a row of every tag with its count, a search that looks through titles, text, tags and authors as you type, and latest, most liked or most read.
-- **read it properly.** each post has its own page and link, set large with a drop cap, with the author, views, word count, the comments from dummyjson, and the next and previous posts.
-- **like and comment.** likes and your comments stay on your device, and your comments can be deleted with undo.
-- **write your own.** a title, up to five tags (with suggestions from the tags already in use), and the post in markdown, with a toolbar and `cmd` or `ctrl` + `b`, `i` and `k`. the proof beside it shows the post as it will print, cover and all. on a phone, write and proof are two tabs.
-- **drafts save as you type.** close the tab halfway and it is under drafts when you come back. editing a published post keeps a draft of the edit until you update it.
-- **the print run.** publishing lays the pink pass on your new cover, then the blue one, and lands it with a thump.
-- **yours stays yours.** your posts are numbered after the last one in the feed, marked yours, and listed under their own tab. edit or delete them any time, with undo.
-- **markdown in and out.** save any post as a `.md` file, export all of yours in one file, and import `.md` files back (one post per file, or several with front matter).
-- **keyboard.** `n` to write, `/` to search, `j` and `k` for next and previous, `l` to like, `s` to share, `e` to edit, `esc` to go back. `?` lists them.
-- **share.** the share sheet on phones, a copied link everywhere else.
-- **sounds.** a drum pass for each ink and a thump when a post lands, a pop for likes and a tick for taps, made with the web audio api. they wait for your first tap, stay quiet under the ios silent switch, and mute in one tap.
-- **works offline.** the feed is kept on the device and refreshed in the background, and a small service worker keeps the app itself, so the rack and your posts open with no connection.
+- **annotated screenshots.** numbered pink pins and hand drawn rings over a screenshot, with the notes listed under it. hover a note or a pin and its partner lights up; on phones the screenshot pans sideways at a readable size and tapping a note slides to its pin.
+- **clips with timed notes.** short muted loops that play when they scroll into view and pause when they leave. each note has a time, rings its part of the frame while it is on, and jumps there when you tap it.
+- **before and after.** drag across two screenshots to compare an old version with the new one.
+- **live covers.** figures can pull a cover apart into its pink and blue passes and print it again.
+- **margin notes.** asides that sit in the margin beside the paragraph on wide screens, and inline on phones.
+- **a feed.** every post goes out on [rss](https://blogspace.ashwin.co.in/rss.xml), and there is a sitemap.
 - **a misprinted 404**, and every page sets its own title.
 
 ## the design
 
 a blog is self publishing, and the cheapest, loudest way to self publish on paper is a riso zine. so that is what it looks like.
 
-- **two inks.** medium blue (`#2f55a4`) for all the text and fluorescent pink (`#ff48b0`) for the loud parts, on a natural stock (`#f7f6f2`) with a fibre grain. deeper cuts of each are used where text needs the contrast. there is no dark mode: it is printed paper.
-- **generated covers.** every cover is built from its post: the first letter of the title (skipping the and a) in one ink, a shape in the other, solid, halftone or ruled. the pink pass sits a couple of pixels off register, like a real riso print. the same post always gets the same cover.
-- **the wordmark.** blue over pink, printed off register.
-- **type.** [anybody](https://fonts.google.com/specimen/Anybody) for the wordmark, titles and covers, squeezed down its width axis like a poster face. [literata](https://fonts.google.com/specimen/Literata) for reading, and [spline sans mono](https://fonts.google.com/specimen/Spline+Sans+Mono) for numbers, tags and labels.
-- **moving between pages.** the cover you tap grows into the post, and shrinks back into its place in the rack when you go back, using view transitions. the wordmark folds down to a small header on inner pages.
-- **every screen.** one column on phones, two on tablets, three or four on desktop, and the post page puts the cover beside the text when there is room. it was checked at 15 sizes from a 320 px iphone se to a 2560 px monitor, including landscape phones, with no sideways scroll and nothing clipped.
-- **nothing jumps.** fonts are self-hosted and preloaded with metric matched fallbacks, the page fades in once they are ready, and loading placeholders hold the same space as what replaces them. layout shift on load measures 0.
+- **two inks.** medium blue (`#2f55a4`) for all the text and fluorescent pink (`#ff48b0`) for the loud parts, on a natural stock (`#f7f6f2`) with a fibre grain. the inks only overprint on covers. there is no dark mode: it is printed paper.
+- **generated covers.** every cover is built from its post's seed at build time: the first letter of the title (skipping the and a) in one ink, a shape in the other, solid, halftone or ruled. the pink pass sits a couple of pixels off register.
+- **type.** [anybody](https://fonts.google.com/specimen/Anybody) for the wordmark, titles and covers, squeezed down its width axis like a poster face. [literata](https://fonts.google.com/specimen/Literata) for reading, and [spline sans mono](https://fonts.google.com/specimen/Spline+Sans+Mono) for notes, tags and labels.
+- **moving between pages.** the cover and title of a card grow into the post, and shrink back when you go back, with cross document view transitions. there is no client router.
+- **every screen.** checked at 10 sizes from a 320 px phone to a 2560 px monitor, including a landscape phone, with no sideways scroll.
+- **nothing jumps.** fonts are self-hosted with metric matched fallbacks, the latin files are preloaded, and the page fades in once they are ready. images and clips have their size before they load. layout shift measures 0 on load, and 0 while you use the figures.
 
 <details>
 <summary><strong>more screenshots</strong></summary>
 
 <br>
 
-![a post on desktop: the cover sticky on the left with views, words and author, and the post, tags, actions, comments and the next post on the right](./docs/screenshots/BlogSpace-5.webp)
+![a post on desktop: the cover on the left, and the title, dek, tags and facts on the right](./docs/screenshots/BlogSpace-2.webp)
 
-![the writer on desktop: the editor on the left and the printed proof of the post, with its cover, on the right](./docs/screenshots/BlogSpace-6.webp)
+![an annotated screenshot of the old writer with six numbered pink pins and rings, and the six notes under it](./docs/screenshots/BlogSpace-3.webp)
 
-<p align="center">
-  <img src="./docs/screenshots/BlogSpace-7.webp" width="32%" alt="posts tagged love on a phone, sorted by most liked">
-  &nbsp;
-  <img src="./docs/screenshots/BlogSpace-8.webp" width="32%" alt="the not found page: a misprinted cover with a big 4 and the line this page did not make the print run">
-</p>
+![the cover passes figure: the pink pass, the blue pass, and both together with a print it again link](./docs/screenshots/BlogSpace-4.webp)
 
 </details>
+
+## writing a post
+
+a post is a folder in [`src/content/posts`](src/content/posts) with an `index.mdx` and its media beside it:
+
+```
+src/content/posts/reprinting-blogspace/
+  index.mdx
+  writer.webp
+  writer-proof.mp4
+  writer-proof-poster.jpg
+```
+
+the front matter:
+
+```yaml
+---
+title: Reprinting BlogSpace
+dek: One line under the title, also used for feeds and link previews.
+date: 2026-09-29
+kind: build log            # build log, deep dive or note
+tags: [blogspace, design]
+cover: reprinting-blogspace # the cover seed; keeps the cover if the title changes
+draft: false               # drafts show in dev only
+project:
+  name: BlogSpace
+  live: https://blogspace.ashwin.co.in
+  repo: https://github.com/Ashwin-S-Nambiar/Blogspace
+  notes: https://notes.ashwin.co.in/projects/BlogSpace
+  stack: [HTML, CSS, JavaScript]
+---
+```
+
+then import what the post needs from `src/components`. positions are percentages of the image or frame, from the top left.
+
+```mdx
+<Annotated
+  src={writer}
+  alt="what the screenshot shows"
+  marks={[{ x: 4, y: 43, w: 16, h: 5, note: 'Up to five tags, as chips' }]}
+/>
+
+<Clip
+  src={writerClip}
+  poster={writerPoster}
+  length={12}
+  label="what happens in the clip"
+  cues={[{ from: 3, to: 4.6, text: 'Tags turn into chips', x: 3, y: 40, w: 17, h: 5 }]}
+/>
+
+<Compare before={old} after={now} beforeLabel="2025" afterLabel="2026" beforeAlt="..." afterAlt="..." />
+
+<Passes seed="reprinting-blogspace" title="Reprinting BlogSpace" />
+
+<Aside label="House rule">Put it before the paragraph it sits beside.</Aside>
+```
+
+clips are h.264 mp4 without sound. a mark without `w` and `h` is just a pin. figures are full width unless you pass `narrow`.
 
 ## the stack
 
 | layer | choices |
 | --- | --- |
-| markup and style | plain html and css |
-| script | es modules in [`js/`](js), loaded straight by the browser |
-| data | [dummyjson](https://dummyjson.com/docs/posts) posts, users and comments; your posts, drafts, likes and comments in `localStorage` |
-| motion | css, the web animations api and view transitions |
-| type | [anybody](https://fonts.google.com/specimen/Anybody), [literata](https://fonts.google.com/specimen/Literata) and [spline sans mono](https://fonts.google.com/specimen/Spline+Sans+Mono), self-hosted |
+| site | [astro 7](https://astro.build) with [mdx](https://mdxjs.com), fully static |
+| content | content collections, one folder per post, typed front matter |
+| images | `astro:assets`, as avif and webp at four widths |
+| fonts | the astro fonts api, self-hosted, with generated fallbacks |
+| motion | css, cross document view transitions |
+| feeds | [@astrojs/rss](https://docs.astro.build/en/recipes/rss/) and [@astrojs/sitemap](https://docs.astro.build/en/guides/integrations-guide/sitemap/) |
 | icons | [phosphor](https://phosphoricons.com) bold, inlined as an svg sprite |
+| lint and format | [biome](https://biomejs.dev), with a pre-commit hook |
 | hosting | [vercel](https://vercel.com/), as static files |
 
 ## running it
 
-there is nothing to install. the modules need to be served rather than opened as a file, so any static server works:
-
 ```sh
 git clone https://github.com/Ashwin-S-Nambiar/Blogspace.git
 cd Blogspace
-python3 -m http.server 5173   # or: npx serve
+npm install
+npm run dev       # http://localhost:4321
+npm run build     # static site in dist/
+npm run check     # biome and astro check
 ```
-
-then open http://localhost:5173.
 
 ## the shape of it
 
 ```
-index.html      the page, the halftone patterns and the icon sprite
-index.css       tokens, then every component, in one file
-404.html        the misprint page
-sw.js           keeps the app on the device for offline use
-js/
-  main.js       routes, the rack, the post page, the writer, toasts and keys
-  api.js        dummyjson: the feed, authors and comments, cached on the device
-  cover.js      the two ink covers, generated from each post
-  md.js         a small, safe markdown renderer
-  store.js      your posts, drafts, likes and comments
-  sound.js      web audio drum, thump and pop
-  tip.js        tooltips for icon buttons
-fonts/          anybody, literata and spline sans mono, latin and latin-ext
+src/
+  content.config.ts   the posts collection and its front matter
+  content/posts/      one folder per post, media beside it
+  pages/              the rack, posts, tags, rss and the 404
+  layouts/Base.astro  the head, masthead and footer
+  components/         cover, annotated, clip, compare, passes, aside, rack
+  lib/                the cover generator, post helpers and tooltips
+  styles/             tokens and components, and the post column grid
+  assets/fonts/       anybody, literata and spline sans mono
+public/sw.js          retires the old app's service worker
 ```
-
-## known rough edges
-
-- **your posts live on one device.** there is no account and no sync. export them as markdown to move them.
-- **dummyjson is read only.** likes and comments on its posts are kept on your device too, and nobody else sees them.
-- **clearing site data clears your posts.** the export button is the backup.
 
 ---
 
