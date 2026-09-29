@@ -89,7 +89,7 @@ draft: false               # drafts show in dev only
 project:
   name: Inspect
   live: https://inspect.ashwin.co.in
-  repo: https://github.com/Ashwin-S-Nambiar/Blogspace
+  repo: https://github.com/Ashwin-S-Nambiar/Inspect
   notes: https://notes.ashwin.co.in/projects/Inspect
   stack: [Astro 7, MDX]
 hero:
@@ -144,8 +144,8 @@ site settings live in [`src/site.ts`](src/site.ts): the name, the tag filters on
 ## running it
 
 ```sh
-git clone https://github.com/Ashwin-S-Nambiar/Blogspace.git
-cd Blogspace
+git clone https://github.com/Ashwin-S-Nambiar/Inspect.git
+cd Inspect
 npm install
 npm run dev       # http://localhost:4321
 npm run build     # static site in dist/
