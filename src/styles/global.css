@@ -662,6 +662,12 @@ svg {
   }
 }
 
+@media (max-width: 479px) {
+  .issue {
+    display: none;
+  }
+}
+
 @media (max-width: 599px) {
   .rack {
     grid-template-columns: minmax(0, 1fr);

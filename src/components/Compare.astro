@@ -67,23 +67,29 @@ const sizes = '(min-width: 1400px) 1320px, calc(100vw - 32px)';
 
   .handle {
     position: absolute;
+    inset: 0;
+    transform: translateX(var(--pos));
+    pointer-events: none;
+  }
+
+  .handle::before {
+    content: "";
+    position: absolute;
     top: 0;
     bottom: 0;
-    left: var(--pos);
+    left: -1.5px;
     width: 3px;
-    margin-left: -1.5px;
     background: var(--pink);
-    pointer-events: none;
   }
 
   .handle::after {
     content: "";
     position: absolute;
     top: 50%;
-    left: 50%;
+    left: -15px;
     width: 30px;
     height: 30px;
-    margin: -15px 0 0 -15px;
+    margin-top: -15px;
     border-radius: 50%;
     background: var(--pink);
     box-shadow: 0 0 0 2px var(--stock);

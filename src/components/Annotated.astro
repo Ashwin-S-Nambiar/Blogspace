@@ -23,13 +23,14 @@ const pct = (n: number) => `${n}%`;
 ---
 
 <figure class:list={['fig', 'annotated', { wide: !narrow }]} data-annotated>
+  <div class="pan">
   <div class="shot">
     <Picture
       src={src}
       alt={alt}
       formats={['avif', 'webp']} fallbackFormat="webp"
       widths={[640, 960, 1320, 1920]}
-      sizes="(min-width: 1400px) 1320px, calc(100vw - 32px)"
+      sizes="(max-width: 719px) 760px, (min-width: 1400px) 1320px, calc(100vw - 32px)"
     />
     {marks.map((m, i) => (
       <>
@@ -53,12 +54,16 @@ const pct = (n: number) => `${n}%`;
       </>
     ))}
   </div>
+  </div>
+  <p class="hint" aria-hidden="true">Swipe the screenshot to see all of it</p>
   <figcaption>
     <ol class="notes">
       {marks.map((m, i) => (
-        <li data-i={i}>
-          <span class="n" aria-hidden="true">{i + 1}</span>
-          <span>{m.note}</span>
+        <li>
+          <button type="button" data-i={i}>
+            <span class="n" aria-hidden="true">{i + 1}</span>
+            <span>{m.note}</span>
+          </button>
         </li>
       ))}
     </ol>
@@ -68,21 +73,50 @@ const pct = (n: number) => `${n}%`;
 
 <script>
   for (const fig of document.querySelectorAll<HTMLElement>('[data-annotated]')) {
+    const pan = fig.querySelector<HTMLElement>('.pan');
     const parts = fig.querySelectorAll<HTMLElement>('[data-i]');
     const heat = (i: string | null) => {
       fig.toggleAttribute('data-hot', i !== null);
       for (const el of parts) el.classList.toggle('hot', el.dataset.i === i);
     };
     for (const el of parts) {
-      el.addEventListener('pointerenter', () => heat(el.dataset.i ?? null));
-      el.addEventListener('pointerleave', () => heat(null));
+      el.addEventListener('pointerenter', (e) => {
+        if (e.pointerType === 'mouse') heat(el.dataset.i ?? null);
+      });
+      el.addEventListener('pointerleave', (e) => {
+        if (e.pointerType === 'mouse') heat(null);
+      });
       el.addEventListener('focus', () => heat(el.dataset.i ?? null));
       el.addEventListener('blur', () => heat(null));
+    }
+    for (const note of fig.querySelectorAll<HTMLElement>('.notes [data-i]')) {
+      note.addEventListener('click', () => {
+        const pin = fig.querySelector<HTMLElement>(`.pin[data-i="${note.dataset.i}"]`);
+        heat(note.dataset.i ?? null);
+        if (!pan || !pin || pan.scrollWidth <= pan.clientWidth) return;
+        const smooth = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+        pan.scrollTo({ left: pin.offsetLeft - pan.clientWidth / 3, behavior: smooth ? 'smooth' : 'auto' });
+      });
     }
   }
 </script>
 
 <style>
+  .pan {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    padding: 2px;
+    margin: -2px;
+  }
+
+  .hint {
+    display: none;
+    margin-top: 8px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-2);
+  }
+
   .shot {
     position: relative;
     box-shadow: 0 0 0 1.5px var(--ink);
@@ -154,8 +188,10 @@ const pct = (n: number) => `${n}%`;
     list-style: none;
   }
 
-  .notes li {
+  .notes button {
     display: grid;
+    width: calc(100% + 16px);
+    text-align: left;
     grid-template-columns: 22px 1fr;
     gap: 10px;
     align-items: start;
@@ -169,7 +205,7 @@ const pct = (n: number) => `${n}%`;
     transition: background-color 160ms ease;
   }
 
-  .notes li.hot {
+  .notes button.hot {
     background: var(--pink-tint);
     color: var(--ink-deep);
   }
@@ -187,10 +223,36 @@ const pct = (n: number) => `${n}%`;
     line-height: 1;
   }
 
+  @media (hover: hover) and (pointer: fine) {
+    .notes button:not(.hot):hover {
+      background: var(--hover);
+    }
+  }
+
   .cap {
     font-family: var(--mono);
     font-size: 12px;
     color: var(--ink-2);
+  }
+
+  @media (max-width: 719px) {
+    .pan {
+      margin-inline: calc(-1 * var(--gutter));
+      padding: 2px var(--gutter);
+      scrollbar-width: none;
+    }
+
+    .pan::-webkit-scrollbar {
+      display: none;
+    }
+
+    .shot {
+      width: 760px;
+    }
+
+    .hint {
+      display: block;
+    }
   }
 
   @media (max-width: 599px) {
