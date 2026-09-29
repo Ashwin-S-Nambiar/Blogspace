@@ -1,0 +1,85 @@
+---
+title: A picker that is always full
+dek: Fandeck swapped the browser's colour input for its own OKLCH picker. The honest way to draw OKLCH is a lopsided shape with a hole in it, and I did not want that. So every row of the square is stretched to its own edge.
+date: 2026-09-29T13:00:00+05:30
+kind: deep dive
+tags: [fandeck, color, oklch, canvas]
+project:
+  name: Fandeck
+  live: https://fandeck.ashwin.co.in
+  repo: https://github.com/Ashwin-S-Nambiar/Fandeck
+  notes: https://notes.ashwin.co.in/projects/Fandeck
+  stack: [HTML, CSS, JavaScript, The Color API]
+---
+
+import Annotated from '../../../components/Annotated.astro';
+import Aside from '../../../components/Aside.astro';
+import OklchPlanes from '../../../components/demos/OklchPlanes.astro';
+import picker from './picker.webp';
+
+Fandeck makes a five colour palette from one colour you pick, and lays it out like paint chips: a field of colour on top, a white label underneath. For a tool about colour, the way you pick the first colour matters more than anything else on the page, and for most of its life Fandeck used `<input type="color">`, which hands you whatever picker the browser or operating system has, looking nothing like the page around it.
+
+## The first build was not Fandeck
+
+Before the picker there was a false start worth owning. The first rebuild copied the look of QuizzMe, the project I had just finished: a violet accent, a gradient on the shuffle button, a frosted glass dock, a glow behind the header tinted by your colour, and a dark mode because everything has one. It looked finished and it looked like everything else.
+
+It got rejected, rightly, and the rule that came out of it now covers every project I rebuild: each app gets its own design direction from what it is. A colour tool should have no colour of its own, because colour is judged against neutral grey. So Fandeck's interface is white, grey and ink, the active state is solid black, and the only colour on the page is yours. Dark mode went too, and so did the "Surround" switch that briefly replaced it, because neither did anything for the colours.
+
+With the chrome out of the way, the plain little system picker stood out even more. It had to go.
+
+## Why OKLCH
+
+HSL is the usual choice for a picker square, and it lies about lightness. An HSL yellow and an HSL blue at 50% lightness look nothing alike: the yellow glows and the blue is nearly navy. OKLCH is built so equal steps look like equal steps. L is how light a colour looks, C is how colourful, H is the hue. Fandeck already showed OKLCH values on its chips, so the picker speaking the same language made sense.
+
+The catch is that OKLCH describes more colours than a screen can show. At every lightness and hue there is a maximum chroma past which the colour is out of the sRGB gamut, and that maximum is different for every hue and every lightness. Yellow can be very colourful when it is light. Blue can be very colourful when it is dark.
+
+## The honest square, and why it went
+
+The honest way to draw it is lightness down the side, absolute chroma across, and paint only the colours that exist. That is plane A below. Move the hue and watch it.
+
+<OklchPlanes hue={82} caption="Both planes are drawn live with Fandeck's own conversion code. The pink hatching in A is chroma your screen cannot show at that lightness." />
+
+For yellows it is a sliver down the right, for blues a fat wedge near the bottom, for most hues a lumpy triangle with a lot of hatched nothing. It is accurate, and it is a bad control. Half the square does nothing when you click it, the shape jumps around as you drag the hue, and the colour you want is always crammed into a corner. I tried it and dropped it.
+
+Plane B is what shipped. Lightness still runs down the side, but across each row chroma goes from grey to that row's own maximum. The right edge of the square is always the most colourful colour that lightness allows, so the square is always full, every point on it is a real colour, and the corners always mean the same thing: white, black, the purest colour, grey.
+
+```js
+function planeAt(e) {
+  const r = plane.getBoundingClientRect();
+  const l = 1 - clamp((e.clientY - r.top) / r.height, 0, 1);
+  const x = clamp((e.clientX - r.left) / r.width, 0, 1);
+  return { l, c: x * maxChroma(l, lch.h), h: lch.h };
+}
+```
+
+The cost is that "across" no longer means the same chroma on every row. Half way across a light row and half way across a dark row are different amounts of colour. For picking a base colour that trade is fine, and the C field under the square always shows the real number.
+
+<Aside label="Finding the edge">
+  There is no formula for the edge of the gamut in OKLCH. `maxChroma` binary searches it: 18 halvings between 0 and 0.4, testing whether the colour converts to an RGB value inside 0 to 255. It runs once per row, and the square is only redrawn when the hue changes.
+</Aside>
+
+## The rest of the picker
+
+<Annotated
+  src={picker}
+  alt="Fandeck's picker open over an ochre palette: a before and now chip, the colour's name Hokey Pokey, the OKLCH square, a hue strip, HEX, L, C and H fields and the palette's five colours"
+  caption="The live picker at 2x. The palette is random on each visit."
+  narrow
+  marks={[
+    { x: 3, y: 1, w: 94, h: 12.4, note: 'Before and now, side by side. Tap Before to go back' },
+    { x: 38, y: 18.5, note: 'The name, looked up from The Color API as you move' },
+    { x: 3.9, y: 26.8, w: 92.2, h: 39.2, note: 'Lightness down, chroma across to each row\'s own edge' },
+    { x: 3.9, y: 69, w: 92.2, h: 3.6, note: 'Hue, painted in OKLCH so the steps look even' },
+    { x: 3.9, y: 76.8, w: 92.2, h: 10.2, note: 'HEX, L, C and H, all editable, all in sync' },
+    { x: 84, y: 19, note: 'The eyedropper, where the browser has one' },
+  ]}
+/>
+
+- **Dragging the hue keeps you in gamut.** Chroma is clamped to the new hue's edge as you go, so a vivid yellow dragged towards blue does not turn into an impossible colour.
+- **Keys work.** The square takes arrow keys for lightness and chroma (Shift for bigger steps), the hue strip takes left and right.
+- **It fits where you are.** It opens as a popover above the control bar, gets compact on short portrait screens and goes two columns on a landscape phone.
+- **This palette and recent.** Quick picks for the colours you already have, because the next base is usually one of them.
+
+## What I would tell myself
+
+The accurate diagram and the useful control are different things. Plane A is the one you draw in an article about colour spaces. Plane B is the one you give someone who wants a nice green. It took building both, side by side, to stop thinking of the second one as cheating.

@@ -1,0 +1,184 @@
+---
+interface Props {
+  hue?: number;
+  caption?: string;
+}
+
+const { hue = 82, caption } = Astro.props;
+---
+
+<figure class="fig op" data-op data-hue={hue}>
+  <div class="planes">
+    <div class="plane">
+      <canvas data-kind="slice" width="300" height="220" aria-label="The raw OKLCH gamut slice for this hue"></canvas>
+      <p><span class="k">A</span>The gamut slice, chroma 0 to 0.37</p>
+    </div>
+    <div class="plane">
+      <canvas data-kind="square" width="300" height="220" aria-label="Fandeck's square, chroma relative to each row's edge"></canvas>
+      <p><span class="k">B</span>Fandeck's square, each row to its own edge</p>
+    </div>
+  </div>
+  <label class="hue">
+    <span>Hue</span>
+    <input type="range" min="0" max="359" step="1" value={hue} aria-label="Hue" />
+    <output>{hue}°</output>
+  </label>
+  {caption && <figcaption class="cap">{caption}</figcaption>}
+</figure>
+
+<script>
+  const fromLinear = (v: number) =>
+    (v <= 0.0031308 ? 12.92 * v : 1.055 * v ** (1 / 2.4) - 0.055) * 255;
+
+  function oklchToRgb(l: number, c: number, h: number) {
+    const hr = (h * Math.PI) / 180;
+    const a = c * Math.cos(hr);
+    const b = c * Math.sin(hr);
+    const l1 = (l + 0.3963377774 * a + 0.2158037573 * b) ** 3;
+    const m1 = (l - 0.1055613458 * a - 0.0638541728 * b) ** 3;
+    const s1 = (l - 0.0894841775 * a - 1.291485548 * b) ** 3;
+    return [
+      fromLinear(4.0767416621 * l1 - 3.3077115913 * m1 + 0.2309699292 * s1),
+      fromLinear(-1.2684380046 * l1 + 2.6097574011 * m1 - 0.3413193965 * s1),
+      fromLinear(-0.0041960863 * l1 - 0.7034186147 * m1 + 1.707614701 * s1),
+    ];
+  }
+
+  const inGamut = (rgb: number[]) => rgb.every((v) => v >= -0.5 && v <= 255.5);
+
+  function maxChroma(l: number, h: number) {
+    let lo = 0;
+    let hi = 0.4;
+    for (let i = 0; i < 18; i++) {
+      const mid = (lo + hi) / 2;
+      if (inGamut(oklchToRgb(l, mid, h))) lo = mid;
+      else hi = mid;
+    }
+    return lo;
+  }
+
+  const PAPER = [252, 251, 249];
+  const HATCH = [251, 179, 218];
+
+  function draw(canvas: HTMLCanvasElement, hue: number) {
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const { width: w, height: h } = canvas;
+    const img = ctx.createImageData(w, h);
+    const d = img.data;
+    const square = canvas.dataset.kind === 'square';
+    for (let y = 0; y < h; y++) {
+      const l = 1 - y / (h - 1);
+      const edge = maxChroma(l, hue);
+      for (let x = 0; x < w; x++) {
+        const c = square ? (x / (w - 1)) * edge : (x / (w - 1)) * 0.37;
+        let rgb = oklchToRgb(l, c, hue);
+        if (!square && c > edge) rgb = (x + y) % 9 < 2 ? HATCH : PAPER;
+        const i = (y * w + x) * 4;
+        d[i] = rgb[0];
+        d[i + 1] = rgb[1];
+        d[i + 2] = rgb[2];
+        d[i + 3] = 255;
+      }
+    }
+    ctx.putImageData(img, 0, 0);
+  }
+
+  for (const fig of document.querySelectorAll<HTMLElement>('[data-op]')) {
+    const canvases = [...fig.querySelectorAll('canvas')];
+    const range = fig.querySelector<HTMLInputElement>('input[type="range"]');
+    const out = fig.querySelector('output');
+    let queued = 0;
+    const paint = () => {
+      queued = 0;
+      const hue = Number(range?.value ?? fig.dataset.hue);
+      for (const c of canvases) draw(c, hue);
+      if (out) out.textContent = `${hue}°`;
+    };
+    range?.addEventListener('input', () => {
+      if (!queued) queued = requestAnimationFrame(paint);
+    });
+    new IntersectionObserver(
+      ([e], io) => {
+        if (!e.isIntersecting) return;
+        paint();
+        io.disconnect();
+      },
+      { rootMargin: '200px' },
+    ).observe(fig);
+  }
+</script>
+
+<style>
+  .planes {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .plane {
+    display: grid;
+    gap: 8px;
+  }
+
+  canvas {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 300 / 220;
+    border-radius: 2px;
+    background: var(--sheet);
+    box-shadow: 0 0 0 1px var(--rule);
+  }
+
+  p {
+    display: flex;
+    gap: 8px;
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--ink);
+  }
+
+  .k {
+    flex: none;
+    color: var(--pink-ink);
+  }
+
+  .hue {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 12px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-2);
+  }
+
+  .hue input {
+    flex: 1;
+    min-width: 0;
+    accent-color: var(--pink-ink);
+  }
+
+  .hue output {
+    min-width: 5ch;
+    text-align: right;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .cap {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid var(--rule);
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-2);
+  }
+
+  @media (max-width: 479px) {
+    .planes {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>
