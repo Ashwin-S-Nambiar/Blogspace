@@ -28,6 +28,7 @@ export default defineConfig({
       provider: fontProviders.local(),
       name: 'Inter',
       cssVariable: '--font-sans',
+      display: 'block',
       fallbacks: ['Arial', 'sans-serif'],
       options: {
         variants: pair('inter', { weight: '100 900', style: 'normal' }),
@@ -37,6 +38,7 @@ export default defineConfig({
       provider: fontProviders.local(),
       name: 'Newsreader',
       cssVariable: '--font-serif',
+      display: 'block',
       fallbacks: ['Georgia', 'serif'],
       options: {
         variants: pair('newsreader-italic', { weight: '400 600', style: 'italic' }),
@@ -46,6 +48,7 @@ export default defineConfig({
       provider: fontProviders.local(),
       name: 'Geist Mono',
       cssVariable: '--font-mono',
+      display: 'block',
       fallbacks: ['Courier New', 'monospace'],
       options: {
         variants: pair('geist-mono', { weight: '400 600', style: 'normal' }),

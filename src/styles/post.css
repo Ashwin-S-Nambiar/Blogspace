@@ -216,7 +216,7 @@
 
 .prose a {
   text-decoration: underline;
-  text-decoration-color: var(--line);
+  text-decoration-color: var(--ul);
   text-decoration-thickness: 1px;
   text-underline-offset: 3px;
   transition: text-decoration-color 150ms ease;
@@ -430,7 +430,7 @@
 .facts .facts-name {
   color: var(--strong);
   text-decoration: underline;
-  text-decoration-color: var(--line);
+  text-decoration-color: var(--ul);
   text-underline-offset: 3px;
   transition: text-decoration-color 150ms ease;
 }
@@ -442,7 +442,7 @@
   font-weight: 500;
   color: var(--strong);
   text-decoration: underline;
-  text-decoration-color: var(--line);
+  text-decoration-color: var(--ul);
   text-decoration-thickness: 1px;
   text-underline-offset: 3px;
   white-space: nowrap;
@@ -450,7 +450,7 @@
 }
 
 .prose .plink {
-  text-decoration-color: var(--line);
+  text-decoration-color: var(--ul);
 }
 
 .plink-ic {
@@ -472,6 +472,7 @@
 
 .related ul {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   margin: 0 -10px;
   padding: 0;
   list-style: none;
@@ -515,6 +516,14 @@
 
 .rel-ic {
   background: var(--stage);
+}
+
+.rel-letter {
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--strong);
 }
 
 @media (hover: hover) and (pointer: fine) {

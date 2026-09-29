@@ -31,7 +31,7 @@ const heading = tag ? tagLabel(tag) : 'Writing';
           {site.thumbs && (
             <span class="row-th" aria-hidden="true">
               {thumb ? (
-                <Image src={thumb} alt="" width={224} height={140} fit="cover" loading="eager" />
+                <Image src={thumb} alt="" width={224} height={140} fit="cover" loading={i < 5 ? "eager" : "lazy"} decoding="async" />
               ) : (
                 <span class="glyph">{p.data.glyph ?? p.data.title.slice(0, 1)}</span>
               )}

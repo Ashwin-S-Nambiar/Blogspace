@@ -33,7 +33,6 @@ Astro.locals.project = project;
 const links = project && [
   project.live && { href: project.live, label: 'Live' },
   project.repo && { href: project.repo, label: 'Source' },
-  project.notes && { href: project.notes, label: 'Notes' },
 ].filter((l): l is { href: string; label: string } => Boolean(l));
 ---
 

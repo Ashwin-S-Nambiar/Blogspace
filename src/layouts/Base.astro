@@ -88,7 +88,12 @@ const home = Astro.url.pathname === '/';
           if ((type === 'traverse' || type === 'reload') && typeof y === 'number') scrollTo(0, y);
           else if (!location.hash) scrollTo(0, 0);
         });
-        Promise.race([document.fonts.ready, new Promise((r) => setTimeout(r, 600))]).then(show);
+        const css = getComputedStyle(d);
+        const first = (v) => css.getPropertyValue(v).split(',')[0].trim();
+        const fonts = document.fonts
+          ? Promise.all(['--font-sans', '--font-mono'].map((v) => document.fonts.load(`1em ${first(v)}`))).then(() => document.fonts.ready)
+          : Promise.resolve();
+        Promise.race([fonts, new Promise((r) => setTimeout(r, 600))]).then(show, show);
       })();
     </script>
   </head>
