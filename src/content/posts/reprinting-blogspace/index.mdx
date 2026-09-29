@@ -25,6 +25,8 @@ import openPoster from './open-morph-poster.jpg';
 import printClip from './print-run.mp4';
 import printPoster from './print-run-poster.jpg';
 import writer from './writer.webp';
+import writerClip from './writer-proof.mp4';
+import writerPoster from './writer-proof-poster.jpg';
 
 BlogSpace started in September 2024 as a Scrimba challenge. The whole thing was 104 lines: fetch five posts from Scrimba's copy of JSONPlaceholder, print them in a list, and send a new post off with a `POST` when you hit publish. The server answered with your post, the page put it on top, and a reload took it away again. Nothing was ever saved.
 
@@ -128,6 +130,22 @@ The tricky part was going back. The rack scrolls, loads more posts as you go and
 ## Writing with a proof
 
 Writing a post happens next to a proof: the post as it will print, cover and all, updating as you type.
+
+<Clip
+  src={writerClip}
+  poster={writerPoster}
+  length={12}
+  label="writing a post: the title is typed and the proof cover changes letter, two tags become chips, and bold Markdown renders in the proof"
+  caption="Real speed, recorded on the live app."
+  cues={[
+    { from: 0.8, to: 2.6, text: 'The cover reprints as the title changes', x: 54.5, y: 25.8, w: 40, h: 48.4 },
+    { from: 3, to: 4.6, text: 'Tags turn into chips', x: 2.9, y: 39.6, w: 17, h: 5.2 },
+    { from: 6.8, to: 8.8, text: 'Markdown renders in the proof', x: 54.3, y: 89, w: 42, h: 8.5 },
+    { from: 9.6, to: 12, text: 'Saved as a draft, no button needed', x: 79.4, y: 10.5, w: 8, h: 4.2 },
+  ]}
+/>
+
+The screenshot below is the same writer later on, with the parts called out.
 
 <Annotated
   src={writer}
