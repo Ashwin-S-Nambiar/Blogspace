@@ -1,0 +1,26 @@
+# dependencies
+node_modules/
+
+# build output
+dist/
+
+# astro generated types and caches
+.astro/
+
+# environment
+.env
+.env.*
+!.env.example
+
+# logs
+npm-debug.log*
+*.log
+
+# editors and os
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# vercel
+.vercel/
