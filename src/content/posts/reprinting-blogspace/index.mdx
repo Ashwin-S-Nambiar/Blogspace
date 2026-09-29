@@ -1,0 +1,154 @@
+---
+title: Reprinting BlogSpace
+dek: How a 104 line Scrimba challenge became a riso zine rack, and what I learned printing covers for posts that never had pictures.
+date: 2026-09-29
+kind: build log
+tags: [blogspace, design, css, view-transitions]
+cover: reprinting-blogspace
+project:
+  name: BlogSpace
+  live: https://blogspace.ashwin.co.in
+  repo: https://github.com/Ashwin-S-Nambiar/Blogspace
+  notes: https://notes.ashwin.co.in/projects/BlogSpace
+  stack: [HTML, CSS, JavaScript, DummyJSON]
+---
+
+import Annotated from '../../../components/Annotated.astro';
+import Aside from '../../../components/Aside.astro';
+import Clip from '../../../components/Clip.astro';
+import Compare from '../../../components/Compare.astro';
+import Passes from '../../../components/Passes.astro';
+import after from './after-2026.webp';
+import before from './before-2025.png';
+import openClip from './open-morph.mp4';
+import openPoster from './open-morph-poster.jpg';
+import printClip from './print-run.mp4';
+import printPoster from './print-run-poster.jpg';
+import writer from './writer.webp';
+
+BlogSpace started in September 2024 as a Scrimba challenge. The whole thing was 104 lines: fetch five posts from Scrimba's copy of JSONPlaceholder, print them in a list, and send a new post off with a `POST` when you hit publish. The server answered with your post, the page put it on top, and a reload took it away again. Nothing was ever saved.
+
+In February 2025 I gave it a glassy dark theme and a nicer form. It looked more finished, but it was the same five Latin posts and the same post that vanished on reload.
+
+<Compare
+  before={before}
+  after={after}
+  beforeLabel="2025"
+  afterLabel="2026"
+  beforeAlt="the 2025 version: a dark page with a glassy form for a title and content, a blue publish button, and a Latin placeholder post under it"
+  afterAlt="the 2026 version: the BlogSpace wordmark in blue over pink, tabs, a tag row and four posts with two ink halftone covers"
+  caption="Drag across to go from the 2025 version to the rebuild. Same idea, nothing else in common."
+/>
+
+This September I rebuilt it from nothing. The brief I gave myself was short: real posts, posts that stay, and a look that belongs to a blog and nothing else.
+
+## Why a riso zine
+
+<Aside label="House rule">
+  Pink and blue never overprint in the interface. On a riso the overlap goes a muddy purple, which is lovely on a cover and awful on a button.
+</Aside>
+
+A blog is self publishing. The cheapest, loudest way to self publish on paper is a risograph zine: two inks, cheap stock, and prints that never quite line up. So that is the whole design. Medium blue for all the text, fluorescent pink for the loud parts, on an off white stock with a fibre grain.
+
+The two inks do a lot of work. Blue carries everything you read. Pink only shows up where something wants your eye: the drop cap, a tag, a focus ring, the highlighter on the tag you picked.
+
+## Covers for posts with no pictures
+
+DummyJSON posts come with a title, a body and some tags, and no images. A rack of text cards looks like a spreadsheet, so every post gets a cover printed for it.
+
+The cover is two passes, like a real riso print. One pass is the first letter of the title (skipping "the", "a" and "an"). The other is a shape: a disc, a ring, a peak, a slab, a band, a corner, a wedge or a sun, filled solid, in halftone dots or in ruled lines. The pink pass sits a couple of pixels off register.
+
+<Passes
+  seed="reprinting-blogspace"
+  title="Reprinting BlogSpace"
+  caption="This post's own cover, pulled apart. These are live SVG passes, not screenshots."
+/>
+
+Everything comes from a seed, so a post gets the same cover every time, on every device, with nothing stored. The seed goes through a small hash and into a seeded random number generator:
+
+```js
+function hash(str) {
+  let h = 2166136261;
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+```
+
+Every choice after that (which ink gets the letter, which shape, solid or dots, where the letter sits, how far off register) is a call to the generator in a fixed order. Change the order and every cover in the rack changes, so the order is part of the design now.
+
+The two passes are separate SVGs stacked on top of each other with `mix-blend-mode: multiply`. Where the pink dots cross the blue letter they darken, the way two layers of ink do on paper. That overlap is the only place the purple is allowed.
+
+## The print run
+
+Publishing a post in the app prints its cover. The pink pass wipes down, then the blue one, and the card lands with a small jolt and a thump from the Web Audio API.
+
+<Clip
+  src={printClip}
+  poster={printPoster}
+  length={6.5}
+  narrow
+  label="the print run: a blank cover, then the pink pass wiping down, then the blue pass, then a small jolt"
+  caption="At a third of the speed. Tap a note to jump to it."
+  cues={[
+    { from: 1.4, to: 2.8, text: 'The cover starts blank', x: 6, y: 8 },
+    { from: 2.8, to: 3.9, text: 'The pink pass wipes down', x: 6, y: 8 },
+    { from: 3.9, to: 4.8, text: 'Then the blue pass, slightly off register', x: 6, y: 8 },
+    { from: 4.8, to: 5.4, text: 'A 3px jolt as it lands', x: 4, y: 4, w: 92, h: 92 },
+  ]}
+/>
+
+Each pass is a `clip-path: inset()` animation from the bottom edge up to nothing, 560 ms on the iOS drawer curve. The blue pass starts 340 ms after the pink one, so the two overlap a little instead of taking turns. With reduced motion on, the cover is just there.
+
+## Opening a post
+
+Tapping a card grows its cover and title into their places on the post page, and going back plays the same move in reverse. This is the View Transitions API with two shared names, one on the cover and one on the title.
+
+<Clip
+  src={openClip}
+  poster={openPoster}
+  length={8.3}
+  label="opening a post: the cover and title of a card grow into the post page, then shrink back into the rack"
+  caption="At a third of the speed."
+  cues={[
+    { from: 1.5, to: 2.4, text: 'Hover rings the cover in pink', x: 51, y: 52.8, w: 22, h: 19.5 },
+    { from: 2.4, to: 3.4, text: 'The cover and title grow into the post', x: 3, y: 22, w: 37, h: 49 },
+    { from: 5.6, to: 6.8, text: 'Back plays it in reverse and lands where you left off', x: 51, y: 52.8, w: 22, h: 19.5 },
+  ]}
+/>
+
+<Aside label="Now in Astro">
+  This site does the same morph between real pages with cross document view transitions. There is no router, only a `view-transition-name` on each card and on the post it opens.
+</Aside>
+
+The tricky part was going back. The rack scrolls, loads more posts as you go and can be filtered, so the card you came from might not exist until the rack has rendered again. The app turns off the browser's own scroll restoration, rebuilds the rack, scrolls to where you were, and only then names the card for the transition.
+
+## Writing with a proof
+
+Writing a post happens next to a proof: the post as it will print, cover and all, updating as you type.
+
+<Annotated
+  src={writer}
+  alt="the writer: a title, tag chips for city and food, suggested tags, a formatting toolbar and Markdown text on the left, and a proof of the post with its cover on the right"
+  caption="The writer on a laptop. On phones, Write and Proof are two tabs."
+  marks={[
+    { x: 73.8, y: 13.4, w: 13, h: 5.4, note: 'Drafts save as you type, and say when' },
+    { x: 4.2, y: 43.4, w: 16, h: 5.2, note: 'Up to five tags, as chips' },
+    { x: 3.4, y: 50, w: 39.6, h: 4, note: 'Suggestions come from tags already in the rack' },
+    { x: 4, y: 56.6, w: 19.5, h: 5, note: 'A Markdown toolbar, with Cmd or Ctrl + B, I and K' },
+    { x: 4, y: 64, w: 44, h: 32, note: 'The post itself, in plain Markdown' },
+    { x: 52, y: 24.4, w: 43.6, h: 75, note: 'The proof, with the cover it will be printed with' },
+  ]}
+/>
+
+Your posts, drafts, likes and comments live in `localStorage`, so they stay on your device and survive a reload. That was the one thing the 2024 version could never do. They also go out and come back in as Markdown files with front matter, so nothing is stuck in one browser.
+
+## Nothing jumps
+
+The last pass was about stillness. Fonts are self hosted, and each one has a fallback font face whose metrics are adjusted to match it, so the page does not reflow when the real font arrives. The rack reserves its height while it loads, so the footer cannot slide down. Layout shift measures 0 on load at every size I tested, from a 320 px phone to a 2560 px monitor.
+
+## What is next
+
+The app did its job, but it was a blog without anything of mine in it. So BlogSpace is turning into this: a place for write-ups on the things I build, with the reasons, the dead ends and the details the project pages leave out. The specs stay in [my notes](https://notes.ashwin.co.in/projects/BlogSpace), and the release history stays in Redline. This is the story part.
