@@ -1,0 +1,83 @@
+---
+title: Drawing India right
+dek: Stampbook's map came from a free tile service, and it drew India the way most world maps do. Fixing that meant throwing out every border in the tiles and drawing my own from Natural Earth.
+date: 2026-09-29T14:00:00+05:30
+kind: note
+tags: [stampbook, maps, maplibre]
+project:
+  name: Stampbook
+  live: https://stampbook.ashwin.co.in
+  repo: https://github.com/Ashwin-S-Nambiar/Stampbook
+  notes: https://notes.ashwin.co.in/projects/Stampbook
+  stack: [React 19, MapLibre GL, OpenFreeMap, Natural Earth]
+---
+
+import Aside from '../../../components/Aside.astro';
+import Compare from '../../../components/Compare.astro';
+import stampbook from './stampbook.webp';
+import tiles from './tiles.webp';
+
+Stampbook is a travel journal shaped like an Indian passport. Every trip is a stamp, and the left page is a map that flies to wherever the stamp was. The map is MapLibre GL over free vector tiles from OpenFreeMap, recoloured to look like it is printed on the passport's security paper.
+
+The first time I opened it on India, it was wrong. Jammu and Kashmir was cut in two, with a dotted line through Ladakh, and the areas administered by Pakistan and China sat outside the country. That is how most world maps draw it, because most tiles come from OpenStreetMap, which draws the line of control as the de facto border. For a journal made for trips in India, printed in the colours of an Indian passport, a map that does not match the one on a passport is a bug.
+
+<Compare
+  before={tiles}
+  after={stampbook}
+  beforeLabel="Tiles as shipped"
+  afterLabel="Stampbook"
+  beforeAlt="the northern border of India as the free tiles draw it, with Kashmir split and a dotted line through Ladakh, and labels in several scripts"
+  afterAlt="the same area in Stampbook, with India's border drawn around all of Jammu and Kashmir and Ladakh, on the passport paper, labels in English"
+  caption="The same view, before and after. Drag to compare."
+/>
+
+## You cannot fix a border in the tiles
+
+Vector tiles bake boundaries in. There is a boundary layer with lines already cut and classed, and the style can only choose how to paint them. You can hide a line, but you cannot move it, and you cannot draw one that is not there.
+
+So the fix was to hide all of them. Every layer with `boundary` in its id is filtered out of the style before the map loads, which leaves the land, water and labels with no borders at all.
+
+## Natural Earth has a point of view for every country
+
+Natural Earth is a public domain map dataset, and it has something most datasets do not: its disputed boundary lines carry a field for how each country sees them. `FCLASS_IN` is India's view. For every contested line it says whether India treats it as an international boundary, a disputed one, or does not recognise it at all.
+
+So the borders are built once, offline, into a small GeoJSON file that ships with the app, with every line reduced to one of two kinds:
+
+- **International boundary**, and the lines India marks as its own border. Drawn solid. (`k: 'i'`)
+- **Other disputes.** Drawn dashed, like the dotted lines on a printed atlas. (`k: 'd'`)
+- **Lines India does not recognise** are dropped entirely.
+
+The file is 396 KB, 135 KB gzipped, and loads as a GeoJSON source. Two line layers draw it, slotted under the labels so place names still sit on top:
+
+```js
+{
+  id: 'borders',
+  type: 'line',
+  source: 'borders',
+  filter: ['==', ['get', 'k'], 'i'],
+  paint: { 'line-color': BORDER, 'line-width': width },
+},
+{
+  id: 'borders-disputed',
+  type: 'line',
+  source: 'borders',
+  filter: ['==', ['get', 'k'], 'd'],
+  paint: { 'line-color': BORDER, 'line-dasharray': [1, 2], 'line-width': width },
+},
+```
+
+<Aside label="No state lines">
+  The tiles' state boundaries went out with everything else, and I did not add them back. A passport map shows countries, and fewer lines look more like paper.
+</Aside>
+
+## The labels had opinions too
+
+Borders were not the only thing the tiles got from OpenStreetMap. The state labels layer also names regions, so the map still printed "Gilgit-Baltistan" and "Azad Kashmir" inside the border I had just drawn. Those two are filtered out of the `label_state` layer by name.
+
+All labels also show their English name first, falling back to the Latin one and then the local one. That is also what took the second and third scripts off Kashgar and Islamabad in the comparison.
+
+## Why it mattered here
+
+For most apps the default tiles are fine and nobody looks. Stampbook's whole idea is an Indian passport: the navy cover, the gold foil, the stamps. The map is on every page of it. It had to agree with the passport, and now it does.
+
+Map data is from Natural Earth (public domain), OpenStreetMap, OpenMapTiles and OpenFreeMap, and search is Photon. All of them are credited in Stampbook's footer.
