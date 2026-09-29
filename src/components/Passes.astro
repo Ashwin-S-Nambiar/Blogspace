@@ -1,0 +1,89 @@
+---
+import Cover from './Cover.astro';
+
+interface Props {
+  seed: string;
+  title: string;
+  caption?: string;
+}
+
+const { seed, title, caption } = Astro.props;
+---
+
+<figure class="fig passes wide" data-passes>
+  <div class="row">
+    <div class="step">
+      <Cover seed={seed} title={title} only="pink" />
+      <p>The pink pass</p>
+    </div>
+    <div class="step">
+      <Cover seed={seed} title={title} only="blue" />
+      <p>The blue pass</p>
+    </div>
+    <div class="step both">
+      <Cover seed={seed} title={title} />
+      <p>
+        Both, a little off register
+        <button type="button" data-reprint>Print it again</button>
+      </p>
+    </div>
+  </div>
+  {caption && <figcaption class="cap">{caption}</figcaption>}
+</figure>
+
+<script>
+  for (const fig of document.querySelectorAll<HTMLElement>('[data-passes]')) {
+    const cover = fig.querySelector<HTMLElement>('.both .cover');
+    fig.querySelector('[data-reprint]')?.addEventListener('click', () => {
+      if (!cover) return;
+      cover.classList.remove('printing');
+      void cover.offsetWidth;
+      cover.classList.add('printing');
+    });
+  }
+</script>
+
+<style>
+  .row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(16px, 3vw, 36px);
+  }
+
+  .step {
+    display: grid;
+    gap: 10px;
+  }
+
+  p {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 4px 12px;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--ink);
+  }
+
+  button {
+    color: var(--pink-ink);
+    text-decoration: underline;
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  .cap {
+    margin-top: 14px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-2);
+  }
+
+  @media (max-width: 599px) {
+    .row {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

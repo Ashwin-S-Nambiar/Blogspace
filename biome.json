@@ -45,6 +45,9 @@
           },
           "style": {
             "noDescendingSpecificity": "off"
+          },
+          "correctness": {
+            "noUnknownTypeSelector": "off"
           }
         }
       }

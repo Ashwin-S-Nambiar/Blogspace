@@ -1,0 +1,16 @@
+---
+import Cover from '../components/Cover.astro';
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="Not found · BlogSpace" description="This page was never printed." compact noindex>
+  <section class="lost">
+    <Cover seed="misprint-404" title="404" label="Misprint" />
+    <h1>This page was never printed</h1>
+    <p>The link may be old, or the post was pulled from the rack.</p>
+    <a class="btn" href="/">
+      <svg class="ic"><use href="#i-back"></use></svg>
+      Back to the rack
+    </a>
+  </section>
+</Base>

@@ -1,0 +1,17 @@
+---
+import Rack from '../components/Rack.astro';
+import Base from '../layouts/Base.astro';
+import { allPosts, tagCounts } from '../lib/posts';
+
+const posts = await allPosts();
+const tags = tagCounts(posts).length;
+const issue = `${posts.length} ${posts.length === 1 ? 'post' : 'posts'} · ${tags} tags`;
+---
+
+<Base
+  title="BlogSpace · Write-ups on the things I build"
+  description="Write-ups on the things I build: why they changed, what went wrong, and the details the project pages leave out, printed like a riso zine."
+  issue={issue}
+>
+  <Rack posts={posts} />
+</Base>

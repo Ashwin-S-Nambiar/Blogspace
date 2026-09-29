@@ -1,0 +1,92 @@
+---
+import { render } from 'astro:content';
+import Cover from '../../components/Cover.astro';
+import Base from '../../layouts/Base.astro';
+import { allPosts, formatDate, kindLabel, numbered, type Post, readTime, seed, vt } from '../../lib/posts';
+import '../../styles/post.css';
+
+export async function getStaticPaths() {
+  const posts = await allPosts();
+  return posts.map((post, i) => ({
+    params: { id: post.id },
+    props: { post, newer: posts[i - 1], older: posts[i + 1], no: numbered(posts).get(post.id) },
+  }));
+}
+
+interface Props {
+  post: Post;
+  newer?: Post;
+  older?: Post;
+  no?: number;
+}
+
+const { post, newer, older, no } = Astro.props;
+const { Content } = await render(post);
+const { title, dek, date, updated, kind, tags, project } = post.data;
+const name = vt(post);
+const minutes = readTime(post);
+---
+
+<Base
+  title={`${title} · BlogSpace`}
+  description={dek}
+  type="article"
+  image={post.data.og?.src}
+  imageAlt={title}
+  compact
+>
+  <a class="back" href="/">
+    <svg class="ic"><use href="#i-back"></use></svg>
+    All posts
+  </a>
+  <article>
+    <header class="post-head">
+      <Cover seed={seed(post)} title={title} name={`cover-${name}`} class="post-cover" />
+      <div class="head-main">
+        <p class="meta"><b>No. {no}</b><span>{kindLabel(kind)}</span><span>·</span><span>{minutes} min read</span></p>
+        <h1 class="post-title" style={`view-transition-name: title-${name}`}>{title}</h1>
+        <p class="dek">{dek}</p>
+        {tags.length > 0 && (
+          <p class="tags">{tags.map((t) => <a href={`/tags/${t}/`}>#{t}</a>)}</p>
+        )}
+        <dl class="facts">
+          <div><dt>Printed</dt><dd><time datetime={date.toISOString()}>{formatDate(date)}</time></dd></div>
+          {updated && <div><dt>Revised</dt><dd><time datetime={updated.toISOString()}>{formatDate(updated)}</time></dd></div>}
+          {project && <div><dt>Project</dt><dd>{project.name}</dd></div>}
+          {project && project.stack.length > 0 && <div><dt>Stack</dt><dd>{project.stack.join(', ')}</dd></div>}
+          {project && (
+            <div>
+              <dt>Links</dt>
+              <dd class="links">
+                {project.live && <a href={project.live} rel="noopener">Live</a>}
+                {project.repo && <a href={project.repo} rel="noopener">Source</a>}
+                {project.notes && <a href={project.notes} rel="noopener">Notes</a>}
+              </dd>
+            </div>
+          )}
+        </dl>
+      </div>
+    </header>
+    <div class="post-body">
+      <Content />
+    </div>
+    {(newer || older) && (
+      <footer class="post-foot">
+        <nav class="pager" aria-label="More posts">
+          {older && (
+            <a class="prev" href={`/posts/${older.id}/`}>
+              <span class="pager-k"><svg class="ic"><use href="#i-prev"></use></svg>Older</span>
+              <span class="pager-t">{older.data.title}</span>
+            </a>
+          )}
+          {newer && (
+            <a class="next" href={`/posts/${newer.id}/`}>
+              <span class="pager-k">Newer<svg class="ic"><use href="#i-next"></use></svg></span>
+              <span class="pager-t">{newer.data.title}</span>
+            </a>
+          )}
+        </nav>
+      </footer>
+    )}
+  </article>
+</Base>

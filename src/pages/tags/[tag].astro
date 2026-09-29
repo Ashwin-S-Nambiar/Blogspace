@@ -1,0 +1,24 @@
+---
+import Rack from '../../components/Rack.astro';
+import Base from '../../layouts/Base.astro';
+import { allPosts, type Post, tagCounts } from '../../lib/posts';
+
+export async function getStaticPaths() {
+  const posts = await allPosts();
+  return tagCounts(posts).map(([tag]) => ({
+    params: { tag },
+    props: { posts: posts.filter((p) => p.data.tags.includes(tag)) },
+  }));
+}
+
+interface Props {
+  posts: Post[];
+}
+
+const { tag } = Astro.params;
+const { posts } = Astro.props;
+---
+
+<Base title={`#${tag} · BlogSpace`} description={`Posts tagged #${tag} on BlogSpace.`} compact>
+  <Rack posts={posts} tag={tag} />
+</Base>

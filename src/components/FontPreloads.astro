@@ -1,0 +1,10 @@
+---
+import { fontData } from 'astro:assets';
+
+const families = ['--font-display', '--font-read', '--font-mono'] as const;
+const urls = families
+  .map((v) => fontData[v]?.find((f) => f.style === 'normal')?.src[0]?.url)
+  .filter((u): u is string => Boolean(u));
+---
+
+{urls.map((href) => <link rel="preload" href={href} as="font" type="font/woff2" crossorigin />)}

@@ -1,0 +1,55 @@
+---
+import { allPosts, kindLabel as kind, numbered, type Post, readTime, seed, tagCounts, vt } from '../lib/posts';
+import Cover from './Cover.astro';
+
+interface Props {
+  posts: Post[];
+  tag?: string;
+}
+
+const { posts, tag } = Astro.props;
+const everything = await allPosts();
+const numbers = numbered(everything);
+const tags = tagCounts(everything);
+const lead = tag ? undefined : posts[0];
+const rest = tag ? posts : posts.slice(1);
+---
+
+<nav class="tagrow" aria-label="Tags">
+  <div class="tagrow-in">
+    <a class="tagchip" href="/" aria-current={tag ? undefined : 'page'}>All <b>{everything.length}</b></a>
+    {tags.map(([t, n]) => (
+      <a class="tagchip" href={`/tags/${t}/`} aria-current={t === tag ? 'page' : undefined}>#{t} <b>{n}</b></a>
+    ))}
+  </div>
+</nav>
+<p class="status-row">
+  <span>{tag ? `${posts.length} ${posts.length === 1 ? 'post' : 'posts'} tagged #${tag}` : 'Newest first'}</span>
+</p>
+<div class="rack">
+  {lead && (
+    <article class="card lead">
+      <a class="card-link" href={`/posts/${lead.id}/`}>
+        <Cover seed={seed(lead)} title={lead.data.title} name={`cover-${vt(lead)}`} label="Latest" />
+        <div class="card-text">
+          <p class="meta"><b>No. {numbers.get(lead.id)}</b><span>{kind(lead.data.kind)}</span><span>·</span><span>{readTime(lead)} min read</span></p>
+          <h2 class="card-title" style={`view-transition-name: title-${vt(lead)}; view-transition-class: hero-title`}>{lead.data.title}</h2>
+          <p class="excerpt">{lead.data.dek}</p>
+          <p class="tags">{lead.data.tags.map((t) => <span>#{t}</span>)}</p>
+        </div>
+      </a>
+    </article>
+  )}
+  {rest.map((p) => (
+    <article class="card">
+      <a class="card-link" href={`/posts/${p.id}/`}>
+        <Cover seed={seed(p)} title={p.data.title} name={`cover-${vt(p)}`} />
+        <div class="card-text">
+          <p class="meta"><b>No. {numbers.get(p.id)}</b><span>{kind(p.data.kind)}</span><span>·</span><span>{readTime(p)} min read</span></p>
+          <h2 class="card-title" style={`view-transition-name: title-${vt(p)}; view-transition-class: hero-title`}>{p.data.title}</h2>
+          <p class="excerpt">{p.data.dek}</p>
+        </div>
+      </a>
+    </article>
+  ))}
+</div>

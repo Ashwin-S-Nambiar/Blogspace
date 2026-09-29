@@ -1,0 +1,36 @@
+---
+interface Props {
+  label?: string;
+}
+
+const { label = 'Margin note' } = Astro.props;
+---
+
+<aside class="aside">
+  <p class="label">{label}</p>
+  <slot />
+</aside>
+
+<style>
+  .aside {
+    align-self: start;
+    display: grid;
+    gap: 6px;
+    padding: 12px 0 0 14px;
+    box-shadow: inset 3px 0 0 var(--pink);
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--ink);
+  }
+
+  .label {
+    font-size: 11px;
+    color: var(--pink-ink);
+  }
+
+  .aside :global(a) {
+    text-decoration-color: var(--pink);
+    text-underline-offset: 3px;
+  }
+</style>
