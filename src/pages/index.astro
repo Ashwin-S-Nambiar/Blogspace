@@ -1,17 +1,23 @@
 ---
-import Rack from '../components/Rack.astro';
+import PostList from '../components/PostList.astro';
 import Base from '../layouts/Base.astro';
-import { allPosts, tagCounts } from '../lib/posts';
+import { allPosts } from '../lib/posts';
+import { site } from '../site';
 
 const posts = await allPosts();
-const tags = tagCounts(posts).length;
-const issue = `${posts.length} ${posts.length === 1 ? 'post' : 'posts'} · ${tags} tags`;
 ---
 
 <Base
-  title="BlogSpace · Write-ups on the things I build"
-  description="Write-ups on the things I build: why they changed, what went wrong, and the details the project pages leave out, printed like a riso zine."
-  issue={issue}
+  title={`${site.name} · ${site.tagline}`}
+  description="Write-ups on the things I build: why they changed, what went wrong, and the small details the project pages leave out."
 >
-  <Rack posts={posts} />
+  <section class="intro">
+    <h1 data-in style="--i:1">{site.tagline}</h1>
+    <p data-in style="--i:2">
+      The story behind each project: why it changed, what went wrong, and the <em>small details</em> the
+      project pages leave out. Specs live in my <a href="https://notes.ashwin.co.in" rel="noopener">notes</a>,
+      releases in <a href="https://redline.ashwin.co.in" rel="noopener">Redline</a>.
+    </p>
+  </section>
+  <PostList posts={posts} />
 </Base>

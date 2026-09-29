@@ -9,31 +9,35 @@ const { caption } = Astro.props;
 ---
 
 <figure class="fig rc" data-rc style={{ '--cloud': `url("${cloud}")` }}>
-  <div class="film">
-    <div class="row" data-mode="idle">
-      <span class="rev">2</span>
-      <div class="desc">
-        <p class="proj">Redline <b>2.0</b></p>
-        <p class="title">Quillify is now Redline</p>
-        <p class="line"><span>Added</span>A curated changelog for my projects.</p>
+  <div class="stage">
+    <div class="stage-in">
+      <div class="film">
+        <div class="row" data-mode="idle">
+          <span class="rev">2</span>
+          <div class="desc">
+            <p class="proj">Redline <b>2.0</b></p>
+            <p class="title">Quillify is now Redline</p>
+            <p class="line"><span>Added</span>A curated changelog for my projects.</p>
+          </div>
+          <p class="date">28 Sep 2026</p>
+        </div>
       </div>
-      <p class="date">28 Sep 2026</p>
+      <div class="controls">
+        <div class="modes" role="group" aria-label="Play">
+          <button type="button" class="ctl primary" data-play="sweep">Draw it, first version</button>
+          <button type="button" class="ctl" data-play="fade">Fade it, now</button>
+        </div>
+        <label class="scrub">
+          <span>Mask angle</span>
+          <input type="range" min="0" max="360" step="1" value="360" aria-label="Mask angle in degrees" />
+          <output>360°</output>
+        </label>
+        <label class="show">
+          <input type="checkbox" />
+          <span>Show the mask</span>
+        </label>
+      </div>
     </div>
-  </div>
-  <div class="controls">
-    <div class="modes" role="group" aria-label="Play">
-      <button type="button" data-play="sweep">Draw it, first version</button>
-      <button type="button" data-play="fade">Fade it, now</button>
-    </div>
-    <label class="scrub">
-      <span>Mask angle</span>
-      <input type="range" min="0" max="360" step="1" value="360" aria-label="Mask angle in degrees" />
-      <output>360°</output>
-    </label>
-    <label class="show">
-      <input type="checkbox" />
-      <span>Show the mask</span>
-    </label>
   </div>
   {caption && <figcaption class="cap">{caption}</figcaption>}
 </figure>
@@ -80,13 +84,11 @@ const { caption } = Astro.props;
 
   .film {
     padding: clamp(20px, 5vw, 36px) clamp(12px, 4vw, 28px);
-    border-radius: 2px;
     background-color: #e7eae3;
     background-image:
       linear-gradient(rgb(156 203 224 / 0.4) 1px, transparent 1px),
       linear-gradient(90deg, rgb(156 203 224 / 0.4) 1px, transparent 1px);
     background-size: 24px 24px;
-    box-shadow: 0 0 0 1px var(--rule);
   }
 
   .row {
@@ -202,79 +204,25 @@ const { caption } = Astro.props;
     white-space: nowrap;
   }
 
-  .controls {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 10px 18px;
-    margin-top: 12px;
-    font-family: var(--mono);
-    font-size: 12px;
-  }
-
   .modes {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
   }
 
-  .modes button {
-    height: 32px;
-    padding: 0 12px;
-    border-radius: 3px;
-    background: var(--ink);
-    color: var(--stock);
-    font-family: var(--mono);
-    font-size: 12px;
-    transition: transform 160ms var(--out);
-  }
-
-  .modes button + button {
-    background: none;
-    color: var(--ink);
-    box-shadow: inset 0 0 0 1px var(--ink);
-  }
-
-  .modes button:active {
-    transform: scale(0.97);
-  }
-
-  .scrub {
+  .scrub,
+  .show {
     display: flex;
     align-items: center;
     gap: 10px;
-    color: var(--ink-2);
   }
 
   .scrub input {
     width: 140px;
-    accent-color: var(--pink-ink);
   }
 
   .scrub output {
-    min-width: 7ch;
-    color: var(--ink);
-    font-variant-numeric: tabular-nums;
-  }
-
-  .show {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: var(--ink-2);
-  }
-
-  .show input {
-    accent-color: var(--pink-ink);
-  }
-
-  .cap {
-    margin-top: 12px;
-    padding-top: 10px;
-    border-top: 1px solid var(--rule);
-    font-family: var(--mono);
-    font-size: 12px;
-    color: var(--ink-2);
+    min-width: 5ch;
   }
 
   @media (max-width: 479px) {

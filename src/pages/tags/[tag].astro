@@ -1,7 +1,8 @@
 ---
-import Rack from '../../components/Rack.astro';
+import PostList from '../../components/PostList.astro';
 import Base from '../../layouts/Base.astro';
-import { allPosts, type Post, tagCounts } from '../../lib/posts';
+import { allPosts, type Post, tagCounts, tagLabel } from '../../lib/posts';
+import { site } from '../../site';
 
 export async function getStaticPaths() {
   const posts = await allPosts();
@@ -19,6 +20,9 @@ const { tag } = Astro.params;
 const { posts } = Astro.props;
 ---
 
-<Base title={`#${tag} · BlogSpace`} description={`Posts tagged #${tag} on BlogSpace.`} compact>
-  <Rack posts={posts} tag={tag} />
+<Base title={`${tagLabel(tag)} · ${site.name}`} description={`Write-ups tagged ${tagLabel(tag).toLowerCase()} on ${site.name}.`}>
+  <section class="intro">
+    <h1 data-in style="--i:1">{site.tagline}</h1>
+  </section>
+  <PostList posts={posts} tag={tag} />
 </Base>

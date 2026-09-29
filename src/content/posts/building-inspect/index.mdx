@@ -1,0 +1,123 @@
+---
+title: Building Inspect
+dek: My write-ups got a quieter frame. One column, figures on stages, and notes that point at things the way a browser's inspector does. Here is how the boxes keep up with a video, and how going back lands you where you left.
+date: 2026-09-29T17:00:00+05:30
+kind: build log
+tags: [inspect, design, motion, view-transitions]
+project:
+  name: Inspect
+  icon: ../../../assets/projects/inspect.svg
+  about: "Write-ups on the things I build, with notes that point."
+  stack: [Astro 7, MDX, View Transitions]
+thumb: ./thumb.png
+hero:
+  image: ./hero.jpg
+  video: ./hero.mp4
+  alt: "a crosshair moves over a screenshot of this site's home page, and a blue selection box appears round the mark, the tag filters, a thumbnail, a title and a date as it passes each one"
+related:
+  - title: "requestVideoFrameCallback()"
+    href: https://developer.mozilla.org/en-US/docs/Web/API/HTMLVideoElement/requestVideoFrameCallback
+    note: "The time of the frame on screen"
+  - title: "Cross-document view transitions"
+    href: https://developer.chrome.com/docs/web-platform/view-transitions/cross-document
+    note: "The title glide between pages"
+  - title: "pagereveal"
+    href: https://developer.mozilla.org/en-US/docs/Web/API/Window/pagereveal_event
+    note: "Where the scroll goes back, before the first frame"
+  - title: "Tabular numbers"
+    href: https://craft.gustavofior.com/tabular-numbers
+    note: "One of the write-ups that shaped how these look"
+---
+
+import Annotated from '../../../components/Annotated.astro';
+import Aside from '../../../components/Aside.astro';
+import Clip from '../../../components/Clip.astro';
+import back from './back.mp4';
+import backPoster from './back-poster.jpg';
+import home from './home.png';
+
+These posts are about small details: a case that opens in mid-air, dice that sit on felt, a number that rolls the right way. The site around them should not shout over that. So it went quiet. One column of text, a grey page, one blue, and every figure on a stage with a little room around it.
+
+The one loud idea is the name. Most of what I write is me pointing at part of a screen and saying *look at this bit*. Browsers already have a way to show that: the inspector draws a box with handles round an element and tells you its size. So that is how every note here points.
+
+## Pointing at things
+
+<Annotated
+  src={home}
+  alt="the top of this site's home page: the Inspect mark, the intro, the writing list with its tag filters, and the newest post with a thumbnail, its title, a line about it and the date"
+  caption="The home page at 2x. Point at a part of it, or at a note."
+  marks={[
+    { x: 5.6, y: 5.1, w: 10.4, h: 4, note: 'The mark is a selection box with one blue handle, the only colour on the page' },
+    { x: 5.6, y: 65, w: 86.1, h: 6.2, note: 'Three tags up front. Every other tag has its own page' },
+    { x: 5.6, y: 77.9, w: 15.6, h: 15.6, note: 'Thumbnails come from each post\'s hero' },
+    { x: 23.3, y: 77.9, w: 15.8, h: 5.7, note: 'The one thing that glides into the post' },
+    { x: 85.4, y: 77.9, w: 6.3, h: 4.9, note: 'Dates in mono, so they line up' },
+  ]}
+/>
+
+Nothing is drawn over a screenshot until you ask. Point at a part of it, or at a note, and that part gets its box. On a phone, tap a note and it stays. A screenshot with every box drawn at once looked like a form someone had filled in wrong.
+
+## Boxes that keep up
+
+A still is easy: the box sits where I measured it. A clip is harder, because the thing I am pointing at moves. The first version had one box per note and left it there, and on the MovieVault clip the case flew straight out of its own box.
+
+So now the box follows a path. I cut the clip into frames and looked for the case in each one. It is the only large, solid dark shape on a light page, so a threshold, a small blur and the biggest blob find it. Where it crossed a dark poster on the shelf and the two merged, I fixed those few frames by hand. That gave a box for every frame, 76 keyframes once the still stretches were collapsed, and the box is interpolated between them.
+
+The other half is timing. Reading `currentTime` on every animation frame lags the picture a little, because the video and the page do not draw at the same moment. `requestVideoFrameCallback` hands over the time of the frame that is actually on screen:
+
+```ts
+const onFrame = (_: number, meta: VideoFrameCallbackMetadata) => {
+  render(meta.mediaTime);
+  if (!video.paused) video.requestVideoFrameCallback(onFrame);
+};
+```
+
+<Aside label="No easing on the box">
+  The box fades in and out, and that is all. Its position never animates. A transition on it would make it trail the case by exactly its own length, which was the lag I was trying to get rid of.
+</Aside>
+
+## Holding your place
+
+<Clip
+  src={back}
+  poster={backPoster}
+  length={7.25}
+  label="the list of writing is scrolled most of the way down, a post is opened and its title glides into the heading, then back returns to the same place in the list and the title glides home to its row"
+  caption="At a third of the speed."
+  cues={[
+    { from: 1.2, to: 1.82, text: 'Most of the way down the list', x: 24.8, y: 69.2, w: 50.3, h: 11.9 },
+    { from: 1.82, to: 2.65, text: 'Only the title moves. The post rises in under it' },
+    { from: 2.75, to: 4.6, text: 'The post opens at the top', x: 25.8, y: 24.3, w: 13.6, h: 3.6 },
+    { from: 4.6, to: 5.45, text: 'Back runs it in reverse, from the old scroll' },
+    { from: 5.45, to: 7.25, text: 'So the title lands on its own row', x: 24.8, y: 69.2, w: 50.3, h: 11.9 },
+  ]}
+/>
+
+Open a post from halfway down the list and only its title moves: it glides from its row into the heading, and everything else crossfades. That is a cross-document view transition with one shared name. Going back is where it broke. The browser restored the scroll a moment after the transition had taken its picture of the page, so the title flew to where the row would have been at the top, and then the list jumped.
+
+The fix is to do the restoring myself, before that picture is taken. Each page saves its scroll into its own history entry as you leave, and puts it back in `pagereveal`, which fires before the first frame of the new page is drawn:
+
+```js
+history.scrollRestoration = 'manual';
+
+addEventListener('pageswap', () => {
+  history.replaceState({ ...history.state, y: scrollY }, '');
+});
+
+addEventListener('pagereveal', () => {
+  const back = navigation.activation?.navigationType === 'traverse';
+  const y = history.state?.y;
+  if (back && typeof y === 'number') scrollTo(0, y);
+});
+```
+
+A `<link rel="expect" href="#end" blocking="render">` holds that first frame until the whole page has been parsed, so there is something to scroll. And All writing, at the top of a post, goes back through history when you came from a list, instead of opening a fresh copy of it at the top.
+
+## Nothing moves
+
+- **Code cards are built, not added.** The label and the copy button are in the HTML, so nothing slides in above the code after the page loads.
+- **Heroes know their size.** Every hero is a 16:10 stage, and the poster is the clip's first frame, so there is no jump when it starts playing.
+- **Fonts wait, briefly.** Inter and Geist Mono are self-hosted and preloaded with fallbacks matched to their metrics, and the page fades in once they are ready, or after 600 ms at most.
+- **Checked, not assumed.** Eleven screen sizes from a 320 px phone to a 2560 px monitor, every page, light and dark: layout shift 0, and nothing wider than the screen.
+
+There is no theme switch. The page follows your system, light or dark, and the figures redraw to match.

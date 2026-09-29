@@ -3,34 +3,49 @@ interface Props {
   label?: string;
 }
 
-const { label = 'Margin note' } = Astro.props;
+const { label } = Astro.props;
 ---
 
 <aside class="aside">
-  <p class="label">{label}</p>
-  <slot />
+  <svg class="ic" aria-hidden="true"><use href="#i-info"></use></svg>
+  <div>
+    {label && <p class="label">{label}</p>}
+    <slot />
+  </div>
 </aside>
 
 <style>
   .aside {
-    align-self: start;
     display: grid;
-    gap: 6px;
-    padding: 12px 0 0 14px;
-    box-shadow: inset 3px 0 0 var(--pink);
-    font-family: var(--mono);
-    font-size: 13px;
-    line-height: 1.55;
-    color: var(--ink);
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: var(--stage);
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--muted);
+  }
+
+  .ic {
+    width: 16px;
+    height: 16px;
+    margin-top: 3px;
+    color: var(--faint);
   }
 
   .label {
-    font-size: 11px;
-    color: var(--pink-ink);
+    margin-bottom: 2px;
+    font-weight: 560;
+    color: var(--strong);
+  }
+
+  .aside :global(p + p) {
+    margin-top: 8px;
   }
 
   .aside :global(a) {
-    text-decoration-color: var(--pink);
+    text-decoration-color: var(--faint);
     text-underline-offset: 3px;
   }
 </style>

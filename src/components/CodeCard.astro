@@ -1,0 +1,34 @@
+---
+const LABELS: Record<string, string> = {
+  js: 'JavaScript',
+  javascript: 'JavaScript',
+  ts: 'TypeScript',
+  typescript: 'TypeScript',
+  jsx: 'JSX',
+  tsx: 'TSX',
+  css: 'CSS',
+  html: 'HTML',
+  astro: 'Astro',
+  json: 'JSON',
+  sh: 'Shell',
+  bash: 'Shell',
+  glsl: 'GLSL',
+  svg: 'SVG',
+  plaintext: 'Text',
+};
+
+const props = Astro.props as Record<string, unknown>;
+const lang = String(props['data-language'] ?? 'plaintext');
+const label = LABELS[lang] ?? lang;
+---
+
+<div class="codecard">
+  <div class="code-h">
+    <span>{label}</span>
+    <button type="button" class="copy" aria-label="Copy code" data-tip="Copy">
+      <svg class="ic ic-copy" aria-hidden="true"><use href="#i-copy"></use></svg>
+      <svg class="ic ic-done" aria-hidden="true"><use href="#i-done"></use></svg>
+    </button>
+  </div>
+  <pre {...props}><slot /></pre>
+</div>

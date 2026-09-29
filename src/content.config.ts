@@ -13,10 +13,26 @@ const posts = defineCollection({
       kind: z.enum(['build log', 'deep dive', 'note']).default('build log'),
       tags: z.array(z.string()).default([]),
       draft: z.boolean().default(false),
-      cover: z.string().optional(),
+      hero: z
+        .object({
+          image: image(),
+          video: z.string().optional(),
+          alt: z.string(),
+          fit: z.enum(['cover', 'contain']).default('cover'),
+          position: z.string().default('50% 50%'),
+          bg: z.string().optional(),
+        })
+        .optional(),
+      thumb: image().optional(),
+      glyph: z.string().optional(),
+      related: z
+        .array(z.object({ title: z.string(), href: z.url(), note: z.string().optional() }))
+        .default([]),
       project: z
         .object({
           name: z.string(),
+          icon: image().optional(),
+          about: z.string().optional(),
           live: z.url().optional(),
           repo: z.url().optional(),
           notes: z.url().optional(),

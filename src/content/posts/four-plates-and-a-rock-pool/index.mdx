@@ -1,32 +1,37 @@
 ---
 title: Four plates and a rock pool
 dek: Riso Tide is a lab on my portfolio, a rock pool going through one tide, printed in four risograph inks. It is not a filter over a picture. It is four pictures, screened and pulled one at a time, twelve times a second.
-date: 2026-09-29T16:00:00+05:30
+date: 2026-09-21T10:00:00+05:30
 kind: deep dive
 tags: [labs, canvas, riso, motion]
 project:
   name: Riso Tide, a portfolio lab
+  icon: ../../../assets/projects/portfolio.png
+  about: "A lab on my portfolio: a rock pool printed in four riso inks."
   live: https://ashwin.co.in/labs/riso
   stack: [Canvas 2D, TypeScript, a web worker]
+hero:
+  image: ./hero.jpg
+  video: ./hero.mp4
+  alt: "a rock pool printed in four risograph inks, the water moving as the tide comes in"
+related:
+  - title: "Risograph"
+    href: https://en.wikipedia.org/wiki/Risograph
+    note: "The machine the lab pretends to be"
+  - title: "OffscreenCanvas"
+    href: https://developer.mozilla.org/en-US/docs/Web/API/OffscreenCanvas
+    note: "Drawing the plates off the main thread"
+  - title: "Web Workers"
+    href: https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API
+    note: "Where the screening runs"
 ---
 
 import Aside from '../../../components/Aside.astro';
-import Clip from '../../../components/Clip.astro';
 import RisoPress from '../../../components/demos/RisoPress.astro';
-import tide from './tide.mp4';
-import tidePoster from './tide-poster.jpg';
 
-BlogSpace looks like a riso zine, but it cheats: two flat colours, one blend mode and a few halftone patterns. I wanted to know what it would take to actually print like a risograph on a screen, with moving pictures. Riso Tide is the answer, a rock pool that the tide goes out of and comes back into, with a crab.
+Most riso looks on the web cheat: two flat colours, one blend mode and a few halftone patterns. I wanted to know what it would take to actually print like a risograph on a screen, with moving pictures. <Project>Riso Tide</Project> is the answer, a rock pool that the tide goes out of and comes back into, with a crab.
 
 The idea came from sevenevesai's [riso-windowseat](https://github.com/sevenevesai/riso-windowseat), which makes whole films this way. Mine is a lab: small, one scene, and the controls to take it apart.
-
-<Clip
-  src={tide}
-  poster={tidePoster}
-  length={12}
-  label="a rock pool printed in yellow, pink, green and blue halftone: sand, blue rocks, a green net and starfish, as the tide washes in over everything and back out, and a crab walks across"
-  caption="One tide, from the lab's showcase clip."
-/>
 
 ## A print is four pictures
 

@@ -1,15 +1,27 @@
 ---
 title: Dice that sit on the felt
 dek: Tenzies went from flat squares to CSS cubes to real 3D dice in three.js. The hard part was not the 3D. It was making ten red dice look like they are lying on the same green table.
-date: 2026-09-29T11:00:00+05:30
+date: 2026-09-27T10:00:00+05:30
 kind: deep dive
 tags: [tenzies, three-js, webgl, motion]
 project:
   name: Tenzies
+  icon: ../../../assets/projects/tenzies.svg
+  about: "Roll ten dice, hold the ones that match and roll the rest until all ten show the same number, in as few rolls as you can."
   live: https://tenzies.ashwin.co.in
   repo: https://github.com/Ashwin-S-Nambiar/Tenzies
   notes: https://notes.ashwin.co.in/projects/Tenzies
   stack: [React 19, three.js, Tailwind CSS 4, Motion]
+hero:
+  image: ./live.jpg
+  alt: "Tenzies on the live site: ten red three.js dice on petrol green felt, the roll count and timer above and the Roll button below"
+related:
+  - title: "three.js docs"
+    href: https://threejs.org/docs/
+    note: "The renderer, the orthographic camera and the lights"
+  - title: "webglcontextlost"
+    href: https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/webglcontextlost_event
+    note: "The event that switches the board to flat dice"
 ---
 
 import Annotated from '../../../components/Annotated.astro';
@@ -22,7 +34,7 @@ import roll from './roll.mp4';
 import rollPoster from './roll-poster.jpg';
 import webgl from './webgl.webp';
 
-Tenzies is ten dice. You hold the ones that match and roll the rest until all ten show the same number. The first version, from 2024, drew each die as a bright red square with white dots that spun flat on the page when you rolled, and a held die turned white. It worked, and it looked like a form.
+<Project /> is ten dice. You hold the ones that match and roll the rest until all ten show the same number. The first version, from 2024, drew each die as a bright red square with white dots that spun flat on the page when you rolled, and a held die turned white. It worked, and it looked like a form.
 
 For the rebuild the page became the felt of a dice tray: deep petrol green with a grain and a soft vignette. Casino red dice with ivory pips, kept from the first version, and held dice turn ivory with ink pips, the old "white means held" in better colours. That settled the look. Then the dice had to actually look like dice.
 
@@ -119,8 +131,8 @@ That is why holding a die can fade it from red to ivory over 200 ms: the rendere
   caption="At a third of the speed. Two twos held, eight dice rolled."
   cues={[
     { from: 0.1, to: 0.45, text: 'Held dice stay put', x: 14, y: 17, w: 12, h: 21 },
-    { from: 0.45, to: 1.3, text: 'The rest leave 26 ms apart and lift off the felt', x: 30, y: 16 },
-    { from: 1.3, to: 2.2, text: 'Each overshoots its face a little, then settles back', x: 30, y: 16 },
+    { from: 0.45, to: 1.3, text: 'The rest leave 26 ms apart and lift off the felt', x: 26.5, y: 14, w: 14.5, h: 23.5 },
+    { from: 1.3, to: 2.2, text: 'Each overshoots its face a little, then settles back', x: 26.5, y: 14, w: 14.5, h: 23.5 },
     { from: 2.3, to: 3.2, text: 'Nothing moving, so the canvas stops drawing' },
   ]}
 />

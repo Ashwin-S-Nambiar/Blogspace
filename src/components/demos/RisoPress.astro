@@ -7,36 +7,40 @@ const { caption } = Astro.props;
 ---
 
 <figure class="fig rp" data-rp>
-  <div class="sheet">
-    <canvas width="480" height="300" aria-label="Four riso plates, yellow, pink, green and blue, printed onto paper as halftone dots"></canvas>
+  <div class="stage">
+    <div class="stage-in">
+      <div class="sheet">
+        <canvas width="480" height="300" aria-label="Four riso plates, yellow, pink, green and blue, printed onto paper as halftone dots"></canvas>
+      </div>
+      <div class="controls">
+        <label>
+          <span>Plates</span>
+          <input type="range" min="1" max="4" step="1" value="4" data-k="plates" />
+          <output>4</output>
+        </label>
+        <label>
+          <span>Misregister</span>
+          <input type="range" min="0" max="8" step="0.5" value="1.5" data-k="slip" />
+          <output>1.5 px</output>
+        </label>
+        <label>
+          <span>Dot pitch</span>
+          <input type="range" min="2" max="9" step="0.5" value="3.5" data-k="pitch" />
+          <output>3.5 px</output>
+        </label>
+        <label class="tog">
+          <input type="checkbox" checked data-k="screened" />
+          <span>Halftone</span>
+        </label>
+      </div>
+      <ol class="controls inks" aria-label="Print order">
+        <li><i style="background:#ffe800"></i>Yellow, 0°</li>
+        <li><i style="background:#ff48b0"></i>Pink, 75°</li>
+        <li><i style="background:#00a95c"></i>Green, 45°</li>
+        <li><i style="background:#0078bf"></i>Blue, 15°</li>
+      </ol>
+    </div>
   </div>
-  <div class="controls">
-    <label>
-      <span>Plates</span>
-      <input type="range" min="1" max="4" step="1" value="4" data-k="plates" />
-      <output>4</output>
-    </label>
-    <label>
-      <span>Misregister</span>
-      <input type="range" min="0" max="8" step="0.5" value="1.5" data-k="slip" />
-      <output>1.5 px</output>
-    </label>
-    <label>
-      <span>Dot pitch</span>
-      <input type="range" min="2" max="9" step="0.5" value="3.5" data-k="pitch" />
-      <output>3.5 px</output>
-    </label>
-    <label class="tog">
-      <input type="checkbox" checked data-k="screened" />
-      <span>Halftone</span>
-    </label>
-  </div>
-  <ol class="inks" aria-label="Print order">
-    <li><i style="background:#ffe800"></i>Yellow, 0°</li>
-    <li><i style="background:#ff48b0"></i>Pink, 75°</li>
-    <li><i style="background:#00a95c"></i>Green, 45°</li>
-    <li><i style="background:#0078bf"></i>Blue, 15°</li>
-  </ol>
   {caption && <figcaption class="cap">{caption}</figcaption>}
 </figure>
 
@@ -300,69 +304,48 @@ const { caption } = Astro.props;
 
 <style>
   .sheet {
-    border-radius: 2px;
-    overflow: hidden;
     background: #f2ede3;
-    box-shadow: 0 0 0 1px var(--rule);
   }
 
   canvas {
-    display: block;
     width: 100%;
     height: auto;
     aspect-ratio: 480 / 300;
-    image-rendering: auto;
   }
 
-  .controls {
+  .controls:not(.inks) {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr));
-    gap: 8px 18px;
-    margin-top: 12px;
-    font-family: var(--mono);
-    font-size: 12px;
-    color: var(--ink-2);
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+    gap: 6px 18px;
   }
 
   label {
     display: grid;
-    grid-template-columns: 11ch minmax(0, 1fr) 6ch;
+    grid-template-columns: 10ch minmax(0, 1fr) 6ch;
     align-items: center;
     gap: 8px;
   }
 
   label.tog {
     display: flex;
-  }
-
-  input {
-    min-width: 0;
-    accent-color: var(--pink-ink);
+    cursor: pointer;
   }
 
   output {
-    color: var(--ink);
     text-align: right;
-    font-variant-numeric: tabular-nums;
   }
 
   .inks {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px 16px;
-    margin-top: 12px;
-    padding: 10px 0 0;
-    border-top: 1px solid var(--rule);
+    margin: 0;
     list-style: none;
-    font-family: var(--mono);
-    font-size: 12px;
-    color: var(--ink);
+    gap: 6px 16px;
   }
 
   .inks li {
     display: flex;
     align-items: center;
     gap: 6px;
+    color: var(--text);
     transition: opacity 160ms ease;
   }
 
@@ -371,16 +354,8 @@ const { caption } = Astro.props;
   }
 
   .inks i {
-    width: 12px;
-    height: 12px;
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
-    mix-blend-mode: multiply;
-  }
-
-  .cap {
-    margin-top: 10px;
-    font-family: var(--mono);
-    font-size: 12px;
-    color: var(--ink-2);
   }
 </style>

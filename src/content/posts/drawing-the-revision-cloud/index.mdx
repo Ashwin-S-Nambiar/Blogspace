@@ -6,10 +6,27 @@ kind: deep dive
 tags: [redline, css, svg, motion]
 project:
   name: Redline
+  icon: ../../../assets/projects/redline.svg
+  about: "See every release of every project I build, what was added, changed, fixed or removed, with a feed for each."
   live: https://redline.ashwin.co.in
   repo: https://github.com/Ashwin-S-Nambiar/Redline
   notes: https://notes.ashwin.co.in/projects/Redline
   stack: [Next.js 16, React 19, Tailwind CSS 4, Neon]
+hero:
+  image: ./register.webp
+  alt: "Redline's register with the newest release circled in a red scalloped revision cloud"
+  fit: contain
+  bg: '#e7eae3'
+related:
+  - title: "border-image"
+    href: https://developer.mozilla.org/en-US/docs/Web/CSS/border-image
+    note: "Slices, widths and round, all in one property"
+  - title: "conic-gradient()"
+    href: https://developer.mozilla.org/en-US/docs/Web/CSS/gradient/conic-gradient
+    note: "The mask that drew the cloud in"
+  - title: "@property"
+    href: https://developer.mozilla.org/en-US/docs/Web/CSS/@property
+    note: "Why the sweep angle could animate at all"
 ---
 
 import Annotated from '../../../components/Annotated.astro';
@@ -17,7 +34,7 @@ import Aside from '../../../components/Aside.astro';
 import RevisionCloud from '../../../components/demos/RevisionCloud.astro';
 import register from './register.webp';
 
-Redline is the changelog for my projects, laid out as an engineering drawing: a sheet with zone numbers round the edge, a title block in the corner, and a revision table where each project's releases are listed. On a real drawing, whoever revises it marks the change in red pencil and draws a scalloped cloud around it so the next reader cannot miss it. Redline does the same for its newest release, and nothing else on the page is red.
+<Project /> is the changelog for my projects, laid out as an engineering drawing: a sheet with zone numbers round the edge, a title block in the corner, and a revision table where each project's releases are listed. On a real drawing, whoever revises it marks the change in red pencil and draws a scalloped cloud around it so the next reader cannot miss it. Redline does the same for its newest release, and nothing else on the page is red.
 
 <Annotated
   src={register}

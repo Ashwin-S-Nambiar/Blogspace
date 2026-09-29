@@ -1,19 +1,29 @@
 ---
 title: Three rules for a rolling number
 dek: The odometer roll in my portfolio labs looks like one animation. It is really three small rules, and each one fixes a bug you only see once you look for it. Switch them off below and watch it break.
-date: 2026-09-29T15:00:00+05:30
+date: 2026-09-18T10:00:00+05:30
 kind: note
 tags: [labs, motion, css]
 project:
   name: Odometer Roll, a portfolio lab
+  icon: ../../../assets/projects/portfolio.png
+  about: "A lab on my portfolio: the odometer roll, with its three rules."
   live: https://ashwin.co.in/labs/odometer
   stack: [CSS transforms, TypeScript]
+glyph: '1300'
+related:
+  - title: "Tabular numbers"
+    href: https://craft.gustavofior.com/tabular-numbers
+    note: "Why every digit should be the same width"
+  - title: "font-variant-numeric"
+    href: https://developer.mozilla.org/en-US/docs/Web/CSS/font-variant-numeric
+    note: "The property behind rule three"
 ---
 
 import Aside from '../../../components/Aside.astro';
 import Odometer from '../../../components/demos/Odometer.astro';
 
-A rolling number is one of those details that is everywhere now: a count ticks up and each digit spins into place like the mileage on an old car. I built one as a lab for my portfolio, and the same idea rolls the totals on Chit's receipt and the counts in QuizzMe. It looked done the day I built it. Then I started pressing buttons.
+A rolling number is one of those details that is everywhere now: a count ticks up and each digit spins into place like the mileage on an old car. I built one as <Project>a lab for my portfolio</Project>, and the same idea rolls the totals on Chit's receipt and the counts in QuizzMe. It looked done the day I built it. Then I started pressing buttons.
 
 Here it is with all three rules on. Press the buttons, then switch a rule off and do the same thing again.
 

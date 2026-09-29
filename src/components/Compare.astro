@@ -15,26 +15,30 @@ interface Props {
 
 const { before, after, beforeAlt, afterAlt, beforeLabel, afterLabel, caption, start = 50 } =
   Astro.props;
-const sizes = '(max-width: 719px) calc(100vw - 32px), 700px';
+const sizes = '(max-width: 660px) 100vw, 620px';
 ---
 
 <figure class="fig compare">
-  <div class="cmp" style={{ '--pos': `${start}%` }} data-compare>
-    <Picture src={after} alt={afterAlt} formats={['avif', 'webp']} fallbackFormat="webp" widths={[700, 1060, 1400]} sizes={sizes} />
-    <div class="before">
-      <Picture src={before} alt={beforeAlt} formats={['avif', 'webp']} fallbackFormat="webp" widths={[700, 1060, 1400]} sizes={sizes} />
+  <div class="stage">
+    <div class="stage-in">
+      <div class="cmp" style={{ '--pos': `${start}%` }} data-compare>
+        <Picture src={after} alt={afterAlt} formats={['avif', 'webp']} fallbackFormat="webp" widths={[640, 960, 1280]} sizes={sizes} />
+        <div class="before">
+          <Picture src={before} alt={beforeAlt} formats={['avif', 'webp']} fallbackFormat="webp" widths={[640, 960, 1280]} sizes={sizes} />
+        </div>
+        <span class="handle" aria-hidden="true"><span class="grip"></span></span>
+        <span class="lab lab-b" aria-hidden="true">{beforeLabel}</span>
+        <span class="lab lab-a" aria-hidden="true">{afterLabel}</span>
+        <input
+          type="range"
+          min="0"
+          max="100"
+          step="0.5"
+          value={start}
+          aria-label={`Slide between ${beforeLabel} and ${afterLabel}`}
+        />
+      </div>
     </div>
-    <span class="handle" aria-hidden="true"></span>
-    <span class="lab lab-b" aria-hidden="true">{beforeLabel}</span>
-    <span class="lab lab-a" aria-hidden="true">{afterLabel}</span>
-    <input
-      type="range"
-      min="0"
-      max="100"
-      step="0.5"
-      value={start}
-      aria-label={`Slide between ${beforeLabel} and ${afterLabel}`}
-    />
   </div>
   {caption && <figcaption class="cap">{caption}</figcaption>}
 </figure>
@@ -50,8 +54,6 @@ const sizes = '(max-width: 719px) calc(100vw - 32px), 700px';
   .cmp {
     position: relative;
     overflow: hidden;
-    border-radius: 2px;
-    box-shadow: 0 0 0 1px var(--rule);
     touch-action: pan-y;
   }
 
@@ -78,45 +80,68 @@ const sizes = '(max-width: 719px) calc(100vw - 32px), 700px';
     position: absolute;
     top: 0;
     bottom: 0;
-    left: -1.5px;
-    width: 3px;
-    background: var(--pink);
+    left: -0.75px;
+    width: 1.5px;
+    background: var(--accent);
   }
 
-  .handle::after {
+  .grip {
+    position: absolute;
+    top: 50%;
+    left: -13px;
+    width: 26px;
+    height: 26px;
+    margin-top: -13px;
+    border-radius: 50%;
+    background: var(--handle);
+    box-shadow:
+      0 0 0 1.5px var(--accent),
+      0 2px 6px rgb(0 0 0 / 0.18);
+    transition: transform 150ms var(--out);
+  }
+
+  .grip::before,
+  .grip::after {
     content: "";
     position: absolute;
     top: 50%;
-    left: -15px;
-    width: 30px;
-    height: 30px;
-    margin-top: -15px;
-    border-radius: 50%;
-    background: var(--pink);
-    box-shadow: 0 0 0 2px var(--stock);
+    width: 0;
+    height: 0;
+    margin-top: -4px;
+    border-block: 4px solid transparent;
+  }
+
+  .grip::before {
+    left: 6px;
+    border-right: 4px solid var(--accent);
+  }
+
+  .grip::after {
+    right: 6px;
+    border-left: 4px solid var(--accent);
   }
 
   .lab {
     position: absolute;
-    top: 12px;
-    padding: 3px 7px 2px;
-    border-radius: 2px;
+    top: 10px;
+    padding: 3px 6px;
+    border-radius: 4px;
     font-family: var(--mono);
-    font-size: 12px;
-    line-height: 1.4;
+    font-size: 11px;
+    line-height: 1.3;
     pointer-events: none;
+    background: var(--chip);
+    color: var(--chip-ink);
   }
 
   .lab-b {
-    left: 12px;
-    background: var(--stock);
-    color: var(--ink-deep);
+    left: 10px;
   }
 
   .lab-a {
-    right: 12px;
-    background: var(--ink);
-    color: var(--stock);
+    right: 10px;
+    background: var(--accent);
+    color: var(--accent-ink);
   }
 
   input {
@@ -129,18 +154,13 @@ const sizes = '(max-width: 719px) calc(100vw - 32px), 700px';
     cursor: ew-resize;
   }
 
-  .cmp:has(input:focus-visible) .handle::after {
-    box-shadow:
-      0 0 0 2px var(--stock),
-      0 0 0 4px var(--ink);
+  .cmp:has(input:active) .grip {
+    transform: scale(1.08);
   }
 
-  .cap {
-    margin-top: 12px;
-    padding-top: 10px;
-    border-top: 1px solid var(--rule);
-    font-family: var(--mono);
-    font-size: 12px;
-    color: var(--ink-2);
+  .cmp:has(input:focus-visible) .grip {
+    box-shadow:
+      0 0 0 1.5px var(--accent),
+      0 0 0 4px var(--accent-soft);
   }
 </style>

@@ -1,23 +1,39 @@
 ---
 title: Opening the case
 dek: MovieVault shows every film as a DVD case. Tapping one opens it in mid-air and flies it to the title page, and back does the whole thing in reverse. Here is how, and what went wrong on the way.
-date: 2026-09-29T10:00:00+05:30
+date: 2026-09-16T10:00:00+05:30
 kind: deep dive
 tags: [movievault, motion, react, waapi]
 project:
   name: MovieVault
+  icon: ../../../assets/projects/movievault.png
+  about: "See where to stream any film, series or anime, follow franchises in order, and keep a list of what to watch next."
   live: https://movievault.ashwin.co.in
   repo: https://github.com/Ashwin-S-Nambiar/MovieVault
   notes: https://notes.ashwin.co.in/projects/MovieVault
   stack: [React 19, React Router, Tailwind CSS 4, TMDB]
+hero:
+  image: ./live.jpg
+  alt: "MovieVault's home: a carousel of DVD cases with Resident Evil in the middle, its title under it, and the search bar"
+related:
+  - title: "Web Animations API"
+    href: https://developer.mozilla.org/en-US/docs/Web/API/Web_Animations_API
+    note: "The three overlapping animations behind the flight"
+  - title: "@property"
+    href: https://developer.mozilla.org/en-US/docs/Web/CSS/@property
+    note: "How --sk became a number the shadows can use"
+  - title: "View transitions"
+    href: https://developer.chrome.com/docs/web-platform/view-transitions
+    note: "What the rest of MovieVault uses, and why the case does not"
 ---
 
 import Aside from '../../../components/Aside.astro';
 import Clip from '../../../components/Clip.astro';
 import flight from './case-flight.mp4';
 import flightPoster from './case-flight-poster.jpg';
+import track from './case-flight.track.json';
 
-Every title in MovieVault sits on a shelf as a DVD case: a plastic edge, a spine, a poster behind the sleeve. Once the shelves looked like that, a plain crossfade to the title page felt wrong. You do not crossfade a DVD. You pull it off the shelf and open it.
+Every title in <Project /> sits on a shelf as a DVD case: a plastic edge, a spine, a poster behind the sleeve. Once the shelves looked like that, a plain crossfade to the title page felt wrong. You do not crossfade a DVD. You pull it off the shelf and open it.
 
 I had a screen recording of an app that did exactly that, and I cut it into frames to see what it was doing. The case opened the moment it was tapped, right where it sat, and then travelled to the page. Going back ran the same film backwards. MovieVault's first version did it the other way round: the cover flew across, landed, and only then flipped open. Opening late made the whole move feel like two moves.
 
@@ -25,14 +41,15 @@ I had a screen recording of an app that did exactly that, and I cut it into fram
   src={flight}
   poster={flightPoster}
   length={8.5}
+  track={track}
   label="a Resident Evil case is pulled half off a shelf, swings open while it flies to the title page with its disc sliding out, then closes and flies back into its slot on the shelf"
   caption="At a third of the speed, on the live site."
   cues={[
-    { from: 0.8, to: 2.2, text: 'Hover pulls the case half off the shelf', x: 33, y: 18, w: 16, h: 33 },
-    { from: 2.2, to: 3.4, text: 'It swings open while it flies, disc and all', x: 45, y: 14 },
-    { from: 3.4, to: 5.8, text: 'It lands on the slot the title page measured for it', x: 6, y: 29, w: 37.5, h: 42 },
-    { from: 5.8, to: 6.3, text: 'Back: it holds still until the shelf is ready', x: 6, y: 29 },
-    { from: 6.3, to: 7.2, text: 'Then closes on the way home, into its own shadow', x: 33, y: 18, w: 16, h: 33 },
+    { from: 1.0, to: 2.3, text: 'Hover pulls the case half off the shelf' },
+    { from: 2.3, to: 3.1, text: 'It swings open while it flies, disc and all' },
+    { from: 3.1, to: 4.3, text: 'It lands on the slot the title page measured for it' },
+    { from: 5.4, to: 6.1, text: 'Back: it holds still until the shelf is ready' },
+    { from: 6.1, to: 7.0, text: 'Then closes on the way home, into its own shadow' },
   ]}
 />
 

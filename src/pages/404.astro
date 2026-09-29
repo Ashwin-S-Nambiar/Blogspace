@@ -1,16 +1,16 @@
 ---
-import Cover from '../components/Cover.astro';
 import Base from '../layouts/Base.astro';
+import { site } from '../site';
 ---
 
-<Base title="Not found · BlogSpace" description="This page was never printed." compact noindex>
+<Base title={`Not found · ${site.name}`} description="Nothing to inspect here." noindex>
   <section class="lost">
-    <Cover seed="misprint-404" title="404" label="Misprint" />
-    <h1>This page was never printed</h1>
-    <p>The link may be old, or the post was pulled from the rack.</p>
-    <a class="btn" href="/">
-      <svg class="ic"><use href="#i-back"></use></svg>
-      Back to the rack
+    <p class="code" data-in style="--i:1">404</p>
+    <h1 data-in style="--i:2">Nothing to inspect here</h1>
+    <p data-in style="--i:3">The link may be old, or the post has moved.</p>
+    <a class="back" href="/" data-in style="--i:4">
+      <svg class="ic" aria-hidden="true"><use href="#i-back"></use></svg>
+      All writing
     </a>
   </section>
 </Base>

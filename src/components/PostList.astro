@@ -1,0 +1,47 @@
+---
+import { Image } from 'astro:assets';
+import { allPosts, type Post, shortDate, tagLabel, vt } from '../lib/posts';
+import { site } from '../site';
+
+interface Props {
+  posts: Post[];
+  tag?: string;
+}
+
+const { posts, tag } = Astro.props;
+const everything = await allPosts();
+const filters = site.filters.filter((f) => everything.some((p) => p.data.tags.includes(f)));
+const heading = tag ? tagLabel(tag) : 'Writing';
+---
+
+<h2 class="sect" data-in style="--i:3">{heading} <span>{posts.length}</span></h2>
+<nav class="filters" aria-label="Filter by tag" data-in style="--i:4">
+  <a class="chip" href="/" aria-current={tag ? undefined : 'page'}>All</a>
+  {filters.map((f) => (
+    <a class="chip" href={`/tags/${f}/`} aria-current={f === tag ? 'page' : undefined}>{tagLabel(f)}</a>
+  ))}
+  {tag && !filters.includes(tag) && <a class="chip" href={`/tags/${tag}/`} aria-current="page">{tagLabel(tag)}</a>}
+</nav>
+<ol class:list={['list', { thumbs: site.thumbs }]}>
+  {posts.map((p, i) => {
+    const thumb = p.data.thumb ?? p.data.hero?.image;
+    return (
+      <li class="row" data-in style={`--i:${Math.min(i, 8) + 5}`}>
+        <a class="row-link" href={`/posts/${p.id}/`} style={`view-transition-name: row-${vt(p)}; view-transition-class: row`}>
+          {site.thumbs && (
+            <span class="row-th" aria-hidden="true">
+              {thumb ? (
+                <Image src={thumb} alt="" width={224} height={140} fit="cover" loading="eager" />
+              ) : (
+                <span class="glyph">{p.data.glyph ?? p.data.title.slice(0, 1)}</span>
+              )}
+            </span>
+          )}
+          <span class="row-t" style={`view-transition-name: title-${vt(p)}; view-transition-class: hero-title`}>{p.data.title}</span>
+          <span class="row-d">{p.data.dek}</span>
+          <time class="row-m" datetime={p.data.date.toISOString()}>{shortDate(p.data.date)}</time>
+        </a>
+      </li>
+    );
+  })}
+</ol>

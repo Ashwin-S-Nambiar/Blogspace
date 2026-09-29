@@ -8,21 +8,25 @@ const { hue = 82, caption } = Astro.props;
 ---
 
 <figure class="fig op" data-op data-hue={hue}>
-  <div class="planes">
-    <div class="plane">
-      <canvas data-kind="slice" width="300" height="220" aria-label="The raw OKLCH gamut slice for this hue"></canvas>
-      <p><span class="k">A</span>The gamut slice, chroma 0 to 0.37</p>
-    </div>
-    <div class="plane">
-      <canvas data-kind="square" width="300" height="220" aria-label="Fandeck's square, chroma relative to each row's edge"></canvas>
-      <p><span class="k">B</span>Fandeck's square, each row to its own edge</p>
+  <div class="stage">
+    <div class="stage-in">
+      <div class="planes">
+        <div class="plane">
+          <canvas data-kind="slice" width="300" height="220" aria-label="The raw OKLCH gamut slice for this hue"></canvas>
+          <p><span class="k">A</span>The gamut slice, chroma 0 to 0.37</p>
+        </div>
+        <div class="plane">
+          <canvas data-kind="square" width="300" height="220" aria-label="Fandeck's square, chroma relative to each row's edge"></canvas>
+          <p><span class="k">B</span>Fandeck's square, each row to its own edge</p>
+        </div>
+      </div>
+      <label class="controls hue">
+        <span>Hue</span>
+        <input type="range" min="0" max="359" step="1" value={hue} aria-label="Hue" />
+        <output>{hue}°</output>
+      </label>
     </div>
   </div>
-  <label class="hue">
-    <span>Hue</span>
-    <input type="range" min="0" max="359" step="1" value={hue} aria-label="Hue" />
-    <output>{hue}°</output>
-  </label>
   {caption && <figcaption class="cap">{caption}</figcaption>}
 </figure>
 
@@ -57,8 +61,22 @@ const { hue = 82, caption } = Astro.props;
     return lo;
   }
 
-  const PAPER = [252, 251, 249];
-  const HATCH = [251, 179, 218];
+  const probe = document.createElement('canvas').getContext('2d');
+  const rgbOf = (name: string, fallback: number[]) => {
+    const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    if (!probe || !value) return fallback;
+    probe.fillStyle = value;
+    probe.fillRect(0, 0, 1, 1);
+    const [r, g, b] = probe.getImageData(0, 0, 1, 1).data;
+    return [r, g, b];
+  };
+  let PAPER = [255, 255, 255];
+  let HATCH = [10, 116, 232];
+  const inks = () => {
+    PAPER = rgbOf('--card', PAPER);
+    const ink = rgbOf('--accent', HATCH);
+    HATCH = ink.map((v, i) => Math.round(v * 0.55 + PAPER[i] * 0.45));
+  };
 
   function draw(canvas: HTMLCanvasElement, hue: number) {
     const ctx = canvas.getContext('2d');
@@ -91,11 +109,15 @@ const { hue = 82, caption } = Astro.props;
     let queued = 0;
     const paint = () => {
       queued = 0;
+      inks();
       const hue = Number(range?.value ?? fig.dataset.hue);
       for (const c of canvases) draw(c, hue);
       if (out) out.textContent = `${hue}°`;
     };
     range?.addEventListener('input', () => {
+      if (!queued) queued = requestAnimationFrame(paint);
+    });
+    matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
       if (!queued) queued = requestAnimationFrame(paint);
     });
     new IntersectionObserver(
@@ -114,6 +136,7 @@ const { hue = 82, caption } = Astro.props;
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 14px;
+    padding: 14px;
   }
 
   .plane {
@@ -125,55 +148,38 @@ const { hue = 82, caption } = Astro.props;
     width: 100%;
     height: auto;
     aspect-ratio: 300 / 220;
-    border-radius: 2px;
-    background: var(--sheet);
-    box-shadow: 0 0 0 1px var(--rule);
+    border-radius: 6px;
+    background: var(--card);
+    box-shadow: 0 0 0 1px var(--card-line);
   }
 
   p {
     display: flex;
     gap: 8px;
-    font-family: var(--mono);
-    font-size: 12px;
+    font-size: 12.5px;
     line-height: 1.45;
-    color: var(--ink);
+    color: var(--muted);
   }
 
   .k {
     flex: none;
-    color: var(--pink-ink);
+    font-family: var(--mono);
+    color: var(--accent);
   }
 
   .hue {
     display: flex;
-    align-items: center;
+    flex-wrap: nowrap;
     gap: 12px;
-    margin-top: 12px;
-    font-family: var(--mono);
-    font-size: 12px;
-    color: var(--ink-2);
   }
 
   .hue input {
     flex: 1;
-    min-width: 0;
-    accent-color: var(--pink-ink);
   }
 
   .hue output {
     min-width: 5ch;
     text-align: right;
-    color: var(--ink);
-    font-variant-numeric: tabular-nums;
-  }
-
-  .cap {
-    margin-top: 12px;
-    padding-top: 10px;
-    border-top: 1px solid var(--rule);
-    font-family: var(--mono);
-    font-size: 12px;
-    color: var(--ink-2);
   }
 
   @media (max-width: 479px) {

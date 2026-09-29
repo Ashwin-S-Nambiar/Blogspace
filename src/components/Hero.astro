@@ -1,0 +1,45 @@
+---
+import { getImage, Picture } from 'astro:assets';
+import { clipUrl, type Post } from '../lib/posts';
+
+interface Props {
+  post: Post;
+  hero: NonNullable<Post['data']['hero']>;
+}
+
+const { post, hero } = Astro.props;
+const video = clipUrl(post, hero.video);
+const still = video ? await getImage({ src: hero.image, format: 'webp', width: Math.min(hero.image.width, 1280) }) : undefined;
+const style = [hero.bg && `--hero-bg: ${hero.bg}`, `--hero-pos: ${hero.position}`].filter(Boolean).join('; ');
+---
+
+<figure class:list={['hero', 'stage', { contain: hero.fit === 'contain' }]} data-in style={`--i:4; ${style}`}>
+  <div class="stage-in">
+    {video && still ? (
+      <video muted loop playsinline preload="auto" poster={still.src} aria-label={hero.alt} data-hero>
+        <source src={video} type="video/mp4" />
+      </video>
+    ) : (
+      <Picture
+        src={hero.image}
+        alt={hero.alt}
+        formats={['avif', 'webp']}
+        fallbackFormat="webp"
+        widths={[640, 960, 1280]}
+        sizes="(max-width: 660px) 100vw, 620px"
+        loading="eager"
+        fetchpriority="high"
+      />
+    )}
+  </div>
+</figure>
+
+<script>
+  const still = matchMedia('(prefers-reduced-motion: reduce)');
+  for (const video of document.querySelectorAll<HTMLVideoElement>('[data-hero]')) {
+    new IntersectionObserver(([e]) => {
+      if (e.isIntersecting && !still.matches) video.play().catch(() => {});
+      else video.pause();
+    }).observe(video);
+  }
+</script>

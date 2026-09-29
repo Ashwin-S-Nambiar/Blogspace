@@ -1,0 +1,30 @@
+---
+import type { ImageMetadata } from 'astro';
+import { Image } from 'astro:assets';
+
+interface Props {
+  items: { title: string; href: string; note?: string }[];
+}
+
+const { items } = Astro.props;
+const icons = import.meta.glob<{ default: ImageMetadata }>('../assets/favicons/*.png', { eager: true });
+const iconFor = (href: string) => icons[`../assets/favicons/${new URL(href).hostname}.png`]?.default;
+---
+
+<section class="related" aria-labelledby="related-h">
+  <h2 class="sect" id="related-h">Related</h2>
+  <ul>
+    {items.map((item) => {
+      const icon = iconFor(item.href);
+      return (
+        <li>
+          <a href={item.href} rel="noopener">
+            {icon ? <Image src={icon} alt="" width={32} height={32} class="rel-ic" /> : <span class="rel-ic" aria-hidden="true" />}
+            <b>{item.title}</b>
+            {item.note && <span>{item.note}</span>}
+          </a>
+        </li>
+      );
+    })}
+  </ul>
+</section>

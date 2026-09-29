@@ -1,0 +1,16 @@
+---
+import { Image } from 'astro:assets';
+
+const project = Astro.locals.project;
+const href = project?.live ?? project?.notes ?? project?.repo;
+const name = project?.name.split(',')[0];
+---
+
+{project && href ? (
+  <a class="plink" href={href} rel="noopener">
+    {project.icon && <Image src={project.icon} alt="" width={32} height={32} class="plink-ic" />}
+    <slot>{name}</slot>
+  </a>
+) : (
+  <slot>{name}</slot>
+)}

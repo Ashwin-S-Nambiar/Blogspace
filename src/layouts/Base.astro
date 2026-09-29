@@ -2,28 +2,25 @@
 import { Font } from 'astro:assets';
 import FontPreloads from '../components/FontPreloads.astro';
 import Sprite from '../components/Sprite.astro';
+import { site } from '../site';
 import '../styles/global.css';
 
 interface Props {
   title: string;
   description: string;
-  compact?: boolean;
   image?: string;
   imageAlt?: string;
   type?: 'website' | 'article';
   noindex?: boolean;
-  issue?: string;
 }
 
 const {
   title,
   description,
-  compact = false,
   image = '/og.jpg',
-  imageAlt = 'BlogSpace: write-ups on the things I build, printed like a riso zine in blue and fluorescent pink',
+  imageAlt = `${site.name}: ${site.tagline.toLowerCase()}`,
   type = 'website',
   noindex = false,
-  issue,
 } = Astro.props;
 
 const canonical = new URL(Astro.url.pathname, Astro.site);
@@ -32,16 +29,17 @@ const home = Astro.url.pathname === '/';
 ---
 
 <!doctype html>
-<html lang="en" class={compact ? 'compact' : undefined}>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#f7f6f2" />
+    <meta name="theme-color" content="#fbfbfa" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#111110" media="(prefers-color-scheme: dark)" />
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
     {noindex && <meta name="robots" content="noindex" />}
-    <meta property="og:site_name" content="BlogSpace" />
+    <meta property="og:site_name" content={site.name} />
     <meta property="og:type" content={type} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
@@ -55,20 +53,40 @@ const home = Astro.url.pathname === '/';
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    <link rel="alternate" type="application/rss+xml" title="BlogSpace" href="/rss.xml" />
+    <link rel="alternate" type="application/rss+xml" title={site.name} href="/rss.xml" />
     <link rel="sitemap" href="/sitemap-index.xml" />
     <FontPreloads />
-    <Font cssVariable="--font-display" />
-    <Font cssVariable="--font-read" />
+    <Font cssVariable="--font-sans" />
+    <Font cssVariable="--font-serif" />
     <Font cssVariable="--font-mono" />
-    <style is:inline>html,body{background:#f7f6f2}</style>
+    <style is:inline>html,body{background:#fbfbfa}@media (prefers-color-scheme:dark){html,body{background:#111110}}</style>
+    <link rel="expect" href="#end" blocking="render" />
     <script is:inline>
       (() => {
         const d = document.documentElement;
         d.classList.add('js');
         const show = () => d.classList.add('ready');
+        const managed = 'onpagereveal' in window && 'navigation' in window;
+        if (managed) history.scrollRestoration = 'manual';
+        const save = () => {
+          try {
+            history.replaceState({ ...history.state, y: scrollY }, '');
+          } catch {}
+        };
+        addEventListener('pageswap', save);
+        addEventListener('pagehide', save);
         addEventListener('pagereveal', (e) => {
           if (e.viewTransition) d.classList.add('ready', 'instant');
+          if (!managed) return;
+          const act = navigation.activation;
+          const type = act?.navigationType;
+          if (e.viewTransition && e.viewTransition.types) {
+            const back = type === 'traverse' && act.entry && act.from && act.entry.index < act.from.index;
+            e.viewTransition.types.add(back ? 'back' : 'forward');
+          }
+          const y = history.state?.y;
+          if ((type === 'traverse' || type === 'reload') && typeof y === 'number') scrollTo(0, y);
+          else if (!location.hash) scrollTo(0, 0);
         });
         Promise.race([document.fonts.ready, new Promise((r) => setTimeout(r, 600))]).then(show);
       })();
@@ -78,26 +96,24 @@ const home = Astro.url.pathname === '/';
     <Sprite />
     <div class="page">
       <header class="top">
-        <a class="mast" href="/" aria-label="BlogSpace, all posts" aria-current={home ? 'page' : undefined}>
-          <span class="mast-p" aria-hidden="true">BlogSpace</span><span class="mast-b">BlogSpace</span>
+        <a class="brand" href="/" aria-current={home ? 'page' : undefined}>
+          <svg class="brand-mark" aria-hidden="true"><use href="#mark"></use></svg>
+          <span class="brand-name">{site.name}</span>
         </a>
-        {issue && (
-          <p class="issue">
-            <span>{issue}</span>
-            <span class="issue-line">Write-ups on the things I build.</span>
-          </p>
-        )}
+        <a class="rss" href="/rss.xml">
+          <svg class="ic" aria-hidden="true"><use href="#i-rss"></use></svg>
+          RSS
+        </a>
       </header>
       <main>
         <slot />
       </main>
       <footer class="credit">
-        <span>Printed in two inks. <a href="/rss.xml">RSS</a></span>
-        <span class="credit-end">
-          <span>Made by <a href="https://ashwin.co.in" rel="noopener">Ashwin</a></span>
-        </span>
+        <span>Made by <a href={site.author} rel="noopener">Ashwin</a></span>
+        <a href={site.source} rel="noopener">Source</a>
       </footer>
     </div>
+    <span id="end" hidden></span>
     <script>
       import { initTips } from '../lib/tip';
       initTips();

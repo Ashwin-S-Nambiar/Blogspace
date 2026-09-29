@@ -5,9 +5,9 @@ import { allPosts } from '../lib/posts';
 export async function GET(context: APIContext) {
   const posts = await allPosts();
   return rss({
-    title: 'BlogSpace',
-    description: 'Write-ups on the things I build, printed like a riso zine.',
-    site: context.site ?? 'https://blogspace.ashwin.co.in',
+    title: 'Inspect',
+    description: 'Write-ups on the things I build.',
+    site: context.site ?? 'https://inspect.ashwin.co.in',
     items: posts.map((post) => ({
       title: post.data.title,
       description: post.data.dek,

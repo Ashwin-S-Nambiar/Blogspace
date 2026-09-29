@@ -1,15 +1,19 @@
 ---
 import { render } from 'astro:content';
-import Cover from '../../components/Cover.astro';
+import CodeCard from '../../components/CodeCard.astro';
+import Hero from '../../components/Hero.astro';
+import ProjectLink from '../../components/ProjectLink.astro';
+import Related from '../../components/Related.astro';
 import Base from '../../layouts/Base.astro';
-import { allPosts, formatDate, kindLabel, numbered, type Post, readTime, seed, vt } from '../../lib/posts';
+import { allPosts, formatDate, kindLabel, type Post, readTime, vt } from '../../lib/posts';
+import { site } from '../../site';
 import '../../styles/post.css';
 
 export async function getStaticPaths() {
   const posts = await allPosts();
   return posts.map((post, i) => ({
     params: { id: post.id },
-    props: { post, newer: posts[i - 1], older: posts[i + 1], no: numbered(posts).get(post.id) },
+    props: { post, newer: posts[i - 1], older: posts[i + 1] },
   }));
 }
 
@@ -17,114 +21,100 @@ interface Props {
   post: Post;
   newer?: Post;
   older?: Post;
-  no?: number;
 }
 
-const { post, newer, older, no } = Astro.props;
+const { post, newer, older } = Astro.props;
 const { Content, headings } = await render(post);
 const sections = headings.filter((h) => h.depth === 2);
-const { title, dek, date, updated, kind, tags, project } = post.data;
+const { title, dek, date, updated, kind, project, hero } = post.data;
 const name = vt(post);
 const minutes = readTime(post);
+Astro.locals.project = project;
+const links = project && [
+  project.live && { href: project.live, label: 'Live' },
+  project.repo && { href: project.repo, label: 'Source' },
+  project.notes && { href: project.notes, label: 'Notes' },
+].filter((l): l is { href: string; label: string } => Boolean(l));
 ---
 
-<Base
-  title={`${title} · BlogSpace`}
-  description={dek}
-  type="article"
-  image={post.data.og?.src}
-  imageAlt={title}
-  compact
->
-  <a class="back" href="/">
-    <svg class="ic"><use href="#i-back"></use></svg>
-    All posts
+<Base title={`${title} · ${site.name}`} description={dek} type="article" image={post.data.og?.src} imageAlt={title}>
+  {sections.length > 0 && (
+    <nav class="toc" aria-label="On this page">
+      <p>On this page</p>
+      <ol>
+        <li><a href="#top" data-toc="top">{title}</a></li>
+        {sections.map((h) => (
+          <li><a href={`#${h.slug}`} data-toc={h.slug}>{h.text}</a></li>
+        ))}
+      </ol>
+    </nav>
+  )}
+  <a class="back" href="/" data-in style="--i:1">
+    <svg class="ic" aria-hidden="true"><use href="#i-back"></use></svg>
+    All writing
   </a>
   <article>
-    <header class="post-head">
-      <Cover seed={seed(post)} title={title} name={`cover-${name}`} class="post-cover" />
-      <div class="head-main">
-        <p class="meta"><b>No. {no}</b><span>{kindLabel(kind)}</span><span>·</span><span>{minutes} min read</span></p>
-        <h1 class="post-title" style={`view-transition-name: title-${name}`}>{title}</h1>
-        <p class="dek">{dek}</p>
-        {tags.length > 0 && (
-          <p class="tags">{tags.map((t) => <a href={`/tags/${t}/`}>#{t}</a>)}</p>
-        )}
-        <dl class="facts">
-          <div><dt>Printed</dt><dd><time datetime={date.toISOString()}>{formatDate(date)}</time></dd></div>
-          {updated && <div><dt>Revised</dt><dd><time datetime={updated.toISOString()}>{formatDate(updated)}</time></dd></div>}
-          {project && <div><dt>Project</dt><dd>{project.name}</dd></div>}
-          {project && project.stack.length > 0 && <div><dt>Stack</dt><dd>{project.stack.join(', ')}</dd></div>}
-          {project && (
+    <header>
+      <h1 class="post-title" id="top" style={`view-transition-name: title-${name}`}>{title}</h1>
+      <p class="byline" data-in style="--i:2">
+        <time datetime={date.toISOString()}>{formatDate(date)}</time>
+        {updated && <span>Revised {formatDate(updated)}</span>}
+        <span>{kindLabel(kind)}</span>
+        <span>{minutes} min read</span>
+      </p>
+      <p class="dek" data-in style="--i:3">{dek}</p>
+      {hero && <Hero post={post} hero={hero} />}
+      {project && (
+        <dl class:list={['facts', { two: !links?.length }]} data-in style="--i:5">
+          <div><dt>Project</dt><dd>{project.live ? <a class="facts-name" href={project.live} rel="noopener">{project.name}</a> : project.name}</dd></div>
+          {project.stack.length > 0 && <div><dt>Stack</dt><dd>{project.stack.join(', ')}</dd></div>}
+          {links && links.length > 0 && (
             <div>
               <dt>Links</dt>
               <dd class="links">
-                {project.live && <a href={project.live} rel="noopener">Live</a>}
-                {project.repo && <a href={project.repo} rel="noopener">Source</a>}
-                {project.notes && <a href={project.notes} rel="noopener">Notes</a>}
+                {links.map((l, i) => (
+                  <>
+                    {i > 0 && <span aria-hidden="true">·</span>}
+                    <a href={l.href} rel="noopener">{l.label}</a>
+                  </>
+                ))}
               </dd>
             </div>
           )}
         </dl>
-      </div>
+      )}
     </header>
-    <div class="post-layout">
-      <aside class="rail" aria-label="In this post">
-        <div class="rail-in">
-          <p class="rail-label">In this post</p>
-          <ol class="toc">
-            {sections.map((h, i) => (
-              <li>
-                <a href={`#${h.slug}`} data-toc={h.slug}>
-                  <span class="toc-n">{String(i + 1).padStart(2, '0')}</span>
-                  <span class="toc-t">{h.text}</span>
-                </a>
-              </li>
-            ))}
-          </ol>
-          <div class="rail-progress" aria-hidden="true"><span></span></div>
-          <p class="rail-meta">{minutes} min read · {formatDate(date)}</p>
-        </div>
-      </aside>
-      <div class="post-body">
-        <Content />
-      </div>
+    <div class="prose" data-in style="--i:6">
+      <Content components={{ pre: CodeCard, Project: ProjectLink }} />
     </div>
+    {post.data.related.length > 0 && <Related items={post.data.related} />}
     {(newer || older) && (
-      <footer class="post-foot">
-        <nav class="pager" aria-label="More posts">
-          {older && (
-            <a class="prev" href={`/posts/${older.id}/`}>
-              <span class="pager-k"><svg class="ic"><use href="#i-prev"></use></svg>Older</span>
-              <span class="pager-t">{older.data.title}</span>
-            </a>
-          )}
-          {newer && (
-            <a class="next" href={`/posts/${newer.id}/`}>
-              <span class="pager-k">Newer<svg class="ic"><use href="#i-next"></use></svg></span>
-              <span class="pager-t">{newer.data.title}</span>
-            </a>
-          )}
-        </nav>
-      </footer>
+      <nav class="pager" aria-label="More writing">
+        {older && (
+          <a class="prev" href={`/posts/${older.id}/`}>
+            <span>Older</span>
+            <b>{older.data.title}</b>
+          </a>
+        )}
+        {newer && (
+          <a class="next" href={`/posts/${newer.id}/`}>
+            <span>Newer</span>
+            <b>{newer.data.title}</b>
+          </a>
+        )}
+      </nav>
     )}
   </article>
   <script>
     const links = [...document.querySelectorAll<HTMLAnchorElement>('[data-toc]')];
-    const bar = document.querySelector<HTMLElement>('.rail-progress span');
-    const body = document.querySelector<HTMLElement>('.post-body');
     const heads = links
       .map((a) => document.getElementById(a.dataset.toc ?? ''))
       .filter((h): h is HTMLElement => Boolean(h));
     let queued = false;
     const update = () => {
       queued = false;
-      if (!body) return;
-      const r = body.getBoundingClientRect();
-      const done = Math.min(1, Math.max(0, (innerHeight * 0.35 - r.top) / r.height));
-      if (bar) bar.style.transform = `scaleY(${done})`;
-      let current = '';
-      for (const h of heads) if (h.getBoundingClientRect().top < innerHeight * 0.35) current = h.id;
+      let current = 'top';
+      for (const h of heads.slice(1)) if (h.getBoundingClientRect().top < innerHeight * 0.35) current = h.id;
       for (const a of links) {
         if (a.dataset.toc === current) a.setAttribute('aria-current', 'true');
         else a.removeAttribute('aria-current');
@@ -138,5 +128,44 @@ const minutes = readTime(post);
     addEventListener('scroll', queue, { passive: true });
     addEventListener('resize', queue);
     update();
+    links[0]?.addEventListener('click', (e) => {
+      e.preventDefault();
+      const smooth = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+      scrollTo({ top: 0, behavior: smooth ? 'smooth' : 'auto' });
+      history.replaceState(history.state, '', location.pathname);
+    });
+
+    const back = document.querySelector<HTMLAnchorElement>('.back');
+    const nav = (window as { navigation?: Navigation }).navigation;
+    const index = nav?.currentEntry?.index ?? -1;
+    const prev = nav && index > 0 ? nav.entries()[index - 1] : undefined;
+    const from = prev?.url ? new URL(prev.url) : undefined;
+    if (back && nav?.canGoBack && from && from.origin === location.origin && (from.pathname === '/' || from.pathname.startsWith('/tags/'))) {
+      back.href = from.pathname;
+      back.addEventListener('click', (e) => {
+        if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+        e.preventDefault();
+        history.back();
+      });
+    }
+
+    for (const btn of document.querySelectorAll<HTMLButtonElement>('.copy')) {
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      btn.addEventListener('click', async () => {
+        const code = btn.closest('.codecard')?.querySelector('pre')?.innerText ?? '';
+        try {
+          await navigator.clipboard.writeText(code);
+        } catch {
+          return;
+        }
+        btn.toggleAttribute('data-done', true);
+        btn.dataset.tip = 'Copied';
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+          btn.removeAttribute('data-done');
+          btn.dataset.tip = 'Copy';
+        }, 1400);
+      });
+    }
   </script>
 </Base>

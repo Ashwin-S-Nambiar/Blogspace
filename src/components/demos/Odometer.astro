@@ -10,31 +10,35 @@ const digits = [...String(start)];
 
 <figure class="fig odo" data-odo data-start={start}>
   <div class="stage">
-    <div class="readout" aria-hidden="true">
-      {digits.map((d, i) => (
-        <span class="col" data-key={`p${digits.length - 1 - i}`}>
-          <span class="sizer">{d}</span>
-          <span class="strip" style={`--row: ${Number(d) + 10}`}>
-            {Array.from({ length: 20 }, (_, n) => <span>{n % 10}</span>)}
-          </span>
-        </span>
-      ))}
+    <div class="stage-in">
+      <div class="view">
+        <div class="readout" aria-hidden="true">
+          {digits.map((d, i) => (
+            <span class="col" data-key={`p${digits.length - 1 - i}`}>
+              <span class="sizer">{d}</span>
+              <span class="strip" style={`--row: ${Number(d) + 10}`}>
+                {Array.from({ length: 20 }, (_, n) => <span>{n % 10}</span>)}
+              </span>
+            </span>
+          ))}
+        </div>
+        <p class="said sr" aria-live="polite">&nbsp;</p>
+      </div>
+      <div class="controls keys">
+        <button type="button" class="ctl" data-step="-1">−1</button>
+        <button type="button" class="ctl" data-step="1">+1</button>
+        <button type="button" class="ctl" data-step="-900">−900</button>
+        <button type="button" class="ctl" data-step="900">+900</button>
+        <button type="button" class="ctl primary" data-jump>Jump a place</button>
+      </div>
+      <fieldset class="controls rules">
+        <legend class="sr">Rules</legend>
+        <label><input type="checkbox" data-rule="dir" checked /><span>Every column rolls the way the value moved</span></label>
+        <label><input type="checkbox" data-rule="place" checked /><span>Columns keyed by place, not position</span></label>
+        <label><input type="checkbox" data-rule="tab" checked /><span>Every digit the same width</span></label>
+      </fieldset>
     </div>
-    <p class="said sr" aria-live="polite">&nbsp;</p>
   </div>
-  <div class="keys">
-    <button type="button" data-step="-1">−1</button>
-    <button type="button" data-step="1">+1</button>
-    <button type="button" data-step="-900">−900</button>
-    <button type="button" data-step="900">+900</button>
-    <button type="button" data-jump>Jump a place</button>
-  </div>
-  <fieldset class="rules">
-    <legend>Rules</legend>
-    <label><input type="checkbox" data-rule="dir" checked /><span>Every column rolls the way the value moved</span></label>
-    <label><input type="checkbox" data-rule="place" checked /><span>Columns keyed by place, not position</span></label>
-    <label><input type="checkbox" data-rule="tab" checked /><span>Every digit the same width</span></label>
-  </fieldset>
   {caption && <figcaption class="cap">{caption}</figcaption>}
 </figure>
 
@@ -166,24 +170,20 @@ const digits = [...String(start)];
 </script>
 
 <style>
-  .stage {
+  .view {
     display: grid;
     place-items: center;
-    gap: 6px;
-    padding: clamp(24px, 6vw, 44px) 12px;
-    border-radius: 2px;
-    background: var(--stock) var(--grain);
-    box-shadow: 0 0 0 1px var(--rule);
+    padding: clamp(28px, 7vw, 48px) 12px;
   }
 
   .readout {
     display: flex;
-    font-family: var(--display);
-    font-weight: 850;
-    font-stretch: 62%;
-    font-size: clamp(64px, 14vw, 112px);
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: clamp(64px, 14vw, 104px);
     line-height: 1;
-    color: var(--ink);
+    letter-spacing: -0.03em;
+    color: var(--strong);
     font-variant-numeric: tabular-nums;
   }
 
@@ -195,11 +195,11 @@ const digits = [...String(start)];
     position: relative;
     display: block;
     height: 1em;
+    max-width: 1em;
     overflow: hidden;
     transition:
       opacity 300ms var(--out),
       max-width 300ms var(--out);
-    max-width: 1em;
   }
 
   .readout :global(.col.entering),
@@ -221,7 +221,7 @@ const digits = [...String(start)];
     display: flex;
     flex-direction: column;
     transform: translateY(calc(var(--row) * -1em));
-    transition: transform 460ms cubic-bezier(0.23, 1, 0.32, 1);
+    transition: transform 460ms var(--out);
   }
 
   .readout :global(.strip > span) {
@@ -231,82 +231,34 @@ const digits = [...String(start)];
   }
 
   .keys {
-    display: flex;
-    flex-wrap: wrap;
     gap: 6px;
-    margin-top: 12px;
-  }
-
-  .keys button {
-    height: 34px;
-    min-width: 52px;
-    padding: 0 12px;
-    border-radius: 3px;
-    box-shadow: inset 0 0 0 1px var(--ink);
-    color: var(--ink);
-    font-family: var(--mono);
-    font-size: 13px;
-    font-variant-numeric: tabular-nums;
-    transition:
-      transform 160ms var(--out),
-      background-color 160ms ease;
-  }
-
-  .keys button:active {
-    transform: scale(0.97);
   }
 
   .keys [data-jump] {
     margin-left: auto;
-    background: var(--ink);
-    color: var(--stock);
   }
 
   .rules {
     display: grid;
     gap: 6px;
-    margin: 12px 0 0;
-    padding: 10px 0 0;
-    border: 0;
-    border-top: 1px solid var(--rule);
-    font-family: var(--mono);
-    font-size: 12px;
-  }
-
-  .rules legend {
-    float: left;
-    margin-bottom: 4px;
-    color: var(--pink-ink);
-    font-size: 11px;
+    margin: 0;
+    min-width: 0;
+    border-width: 1px 0 0;
+    border-style: solid;
+    border-color: var(--card-line);
   }
 
   .rules label {
     display: flex;
     align-items: flex-start;
     gap: 8px;
-    clear: both;
-    color: var(--ink);
     line-height: 1.45;
+    color: var(--text);
+    cursor: pointer;
   }
 
   .rules input {
     margin-top: 2px;
-    accent-color: var(--pink-ink);
-  }
-
-  .cap {
-    margin-top: 12px;
-    padding-top: 10px;
-    border-top: 1px solid var(--rule);
-    font-family: var(--mono);
-    font-size: 12px;
-    color: var(--ink-2);
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .keys button:not([data-jump]):hover {
-      background: var(--hover);
-    }
   }
 
   @media (prefers-reduced-motion: reduce) {

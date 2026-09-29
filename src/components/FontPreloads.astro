@@ -1,7 +1,7 @@
 ---
 import { fontData } from 'astro:assets';
 
-const families = ['--font-display', '--font-read', '--font-mono'] as const;
+const families = ['--font-sans', '--font-mono'] as const;
 const urls = families
   .map((v) => fontData[v]?.find((f) => f.style === 'normal')?.src[0]?.url)
   .filter((u): u is string => Boolean(u));

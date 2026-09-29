@@ -18,5 +18,22 @@
         }
       ]
     }
+  ],
+  "redirects": [
+    {
+      "source": "/posts/reprinting-blogspace",
+      "destination": "/posts/building-inspect/",
+      "permanent": true
+    },
+    {
+      "source": "/posts/reprinting-blogspace/",
+      "destination": "/posts/building-inspect/",
+      "permanent": true
+    },
+    {
+      "source": "/tags/blogspace/",
+      "destination": "/tags/inspect/",
+      "permanent": true
+    }
   ]
 }

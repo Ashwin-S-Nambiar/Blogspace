@@ -1,15 +1,35 @@
 ---
 title: A picker that is always full
 dek: Fandeck swapped the browser's colour input for its own OKLCH picker. The honest way to draw OKLCH is a lopsided shape with a hole in it, and I did not want that. So every row of the square is stretched to its own edge.
-date: 2026-09-29T13:00:00+05:30
+date: 2026-09-23T10:00:00+05:30
 kind: deep dive
 tags: [fandeck, color, oklch, canvas]
 project:
   name: Fandeck
+  icon: ../../../assets/projects/fandeck.svg
+  about: "Five colors from one you pick, with locks, a contrast grid and exports to CSS, Tailwind and JSON."
   live: https://fandeck.ashwin.co.in
   repo: https://github.com/Ashwin-S-Nambiar/Fandeck
   notes: https://notes.ashwin.co.in/projects/Fandeck
   stack: [HTML, CSS, JavaScript, The Color API]
+hero:
+  image: ./picker.webp
+  alt: "Fandeck's OKLCH picker open over an ochre palette"
+  fit: contain
+thumb: ./thumb.png
+related:
+  - title: "OKLCH picker"
+    href: https://oklch.com
+    note: "Evil Martians' picker, with the honest gamut shape"
+  - title: "OKLCH in CSS"
+    href: https://evilmartians.com/chronicles/oklch-in-css-why-quit-rgb-hsl
+    note: "Why OKLCH over RGB and HSL"
+  - title: "A perceptual color space"
+    href: https://bottosson.github.io/posts/oklab/
+    note: "Björn Ottosson on Oklab, where OKLCH comes from"
+  - title: "The Color API"
+    href: https://www.thecolorapi.com
+    note: "Where the colour names come from"
 ---
 
 import Annotated from '../../../components/Annotated.astro';
@@ -17,7 +37,7 @@ import Aside from '../../../components/Aside.astro';
 import OklchPlanes from '../../../components/demos/OklchPlanes.astro';
 import picker from './picker.webp';
 
-Fandeck makes a five colour palette from one colour you pick, and lays it out like paint chips: a field of colour on top, a white label underneath. For a tool about colour, the way you pick the first colour matters more than anything else on the page, and for most of its life Fandeck used `<input type="color">`, which hands you whatever picker the browser or operating system has, looking nothing like the page around it.
+<Project /> makes a five colour palette from one colour you pick, and lays it out like paint chips: a field of colour on top, a white label underneath. For a tool about colour, the way you pick the first colour matters more than anything else on the page, and for most of its life Fandeck used `<input type="color">`, which hands you whatever picker the browser or operating system has, looking nothing like the page around it.
 
 ## The first build was not Fandeck
 
@@ -37,7 +57,7 @@ The catch is that OKLCH describes more colours than a screen can show. At every 
 
 The honest way to draw it is lightness down the side, absolute chroma across, and paint only the colours that exist. That is plane A below. Move the hue and watch it.
 
-<OklchPlanes hue={82} caption="Both planes are drawn live with Fandeck's own conversion code. The pink hatching in A is chroma your screen cannot show at that lightness." />
+<OklchPlanes hue={82} caption="Both planes are drawn live with Fandeck's own conversion code. The blue hatching in A is chroma your screen cannot show at that lightness." />
 
 For yellows it is a sliver down the right, for blues a fat wedge near the bottom, for most hues a lumpy triangle with a lot of hatched nothing. It is accurate, and it is a bad control. Half the square does nothing when you click it, the shape jumps around as you drag the hue, and the colour you want is always crammed into a corner. I tried it and dropped it.
 
