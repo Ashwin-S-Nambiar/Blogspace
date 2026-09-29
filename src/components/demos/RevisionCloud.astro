@@ -1,0 +1,296 @@
+---
+import cloud from '../../assets/demos/redline-cloud.svg?url';
+
+interface Props {
+  caption?: string;
+}
+
+const { caption } = Astro.props;
+---
+
+<figure class="fig rc" data-rc style={{ '--cloud': `url("${cloud}")` }}>
+  <div class="film">
+    <div class="row" data-mode="idle">
+      <span class="rev">2</span>
+      <div class="desc">
+        <p class="proj">Redline <b>2.0</b></p>
+        <p class="title">Quillify is now Redline</p>
+        <p class="line"><span>Added</span>A curated changelog for my projects.</p>
+      </div>
+      <p class="date">28 Sep 2026</p>
+    </div>
+  </div>
+  <div class="controls">
+    <div class="modes" role="group" aria-label="Play">
+      <button type="button" data-play="sweep">Draw it, first version</button>
+      <button type="button" data-play="fade">Fade it, now</button>
+    </div>
+    <label class="scrub">
+      <span>Mask angle</span>
+      <input type="range" min="0" max="360" step="1" value="360" aria-label="Mask angle in degrees" />
+      <output>360°</output>
+    </label>
+    <label class="show">
+      <input type="checkbox" />
+      <span>Show the mask</span>
+    </label>
+  </div>
+  {caption && <figcaption class="cap">{caption}</figcaption>}
+</figure>
+
+<script>
+  for (const fig of document.querySelectorAll<HTMLElement>('[data-rc]')) {
+    const row = fig.querySelector<HTMLElement>('.row');
+    const range = fig.querySelector<HTMLInputElement>('input[type="range"]');
+    const out = fig.querySelector('output');
+    const show = fig.querySelector<HTMLInputElement>('input[type="checkbox"]');
+    if (!row || !range || !out || !show) continue;
+    const setAngle = (deg: number) => {
+      row.style.setProperty('--sweep', `${deg}deg`);
+      range.value = String(deg);
+      out.textContent = `${Math.round(deg)}°`;
+    };
+    for (const b of fig.querySelectorAll<HTMLButtonElement>('[data-play]')) {
+      b.addEventListener('click', () => {
+        row.dataset.mode = 'idle';
+        row.style.removeProperty('--sweep');
+        void row.offsetWidth;
+        row.dataset.mode = b.dataset.play ?? 'idle';
+        out.textContent = b.dataset.play === 'sweep' ? 'playing' : '360°';
+        range.value = '360';
+      });
+    }
+    row.addEventListener('animationend', () => {
+      if (row.dataset.mode === 'sweep') out.textContent = '360°';
+    });
+    range.addEventListener('input', () => {
+      row.dataset.mode = 'scrub';
+      setAngle(Number(range.value));
+    });
+    show.addEventListener('change', () => row.toggleAttribute('data-mask', show.checked));
+  }
+</script>
+
+<style>
+  @property --sweep {
+    syntax: "<angle>";
+    inherits: false;
+    initial-value: 360deg;
+  }
+
+  .film {
+    padding: clamp(20px, 5vw, 36px) clamp(12px, 4vw, 28px);
+    border-radius: 2px;
+    background-color: #e7eae3;
+    background-image:
+      linear-gradient(rgb(156 203 224 / 0.4) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(156 203 224 / 0.4) 1px, transparent 1px);
+    background-size: 24px 24px;
+    box-shadow: 0 0 0 1px var(--rule);
+  }
+
+  .row {
+    position: relative;
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) auto;
+    gap: 14px;
+    padding: 22px 22px 22px 18px;
+    background: #e7eae3;
+    color: #23272a;
+    font-family: system-ui, sans-serif;
+    box-shadow:
+      inset 0 1px 0 rgb(35 39 42 / 0.28),
+      inset 0 -1px 0 rgb(35 39 42 / 0.28);
+  }
+
+  .row::before {
+    content: "";
+    position: absolute;
+    inset: 4px;
+    border: 18px solid transparent;
+    border-image: var(--cloud) 12 / 18px / 0 round;
+    pointer-events: none;
+    mask: conic-gradient(from 300deg, #000 var(--sweep), transparent 0);
+  }
+
+  .row[data-mode="scrub"]::before,
+  .row[data-mode="scrub"]::after {
+    --sweep: inherit;
+  }
+
+  .row[data-mode="sweep"]::before {
+    animation: rc-sweep 760ms cubic-bezier(0.45, 0.05, 0.3, 1) 180ms both;
+  }
+
+  .row[data-mode="fade"]::before {
+    animation: rc-fade 220ms cubic-bezier(0.23, 1, 0.32, 1) both;
+  }
+
+  .row[data-mask]::after {
+    content: "";
+    position: absolute;
+    inset: 4px;
+    background: conic-gradient(from 300deg, rgb(214 62 39 / 0.18) var(--sweep), rgb(35 39 42 / 0.06) 0);
+    pointer-events: none;
+  }
+
+  @keyframes rc-sweep {
+    from {
+      --sweep: 0deg;
+    }
+    to {
+      --sweep: 360deg;
+    }
+  }
+
+  @keyframes rc-fade {
+    from {
+      opacity: 0;
+    }
+  }
+
+  .rev {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 1.5px #23272a;
+    font-size: 14px;
+  }
+
+  .desc {
+    display: grid;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .proj {
+    font-size: 13px;
+    color: #5f666b;
+  }
+
+  .proj b {
+    font-family: ui-monospace, monospace;
+    font-weight: 600;
+    color: #23272a;
+  }
+
+  .title {
+    font-size: clamp(17px, 2.4vw, 21px);
+    font-weight: 600;
+    line-height: 1.2;
+  }
+
+  .line {
+    display: flex;
+    gap: 12px;
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  .line span {
+    flex: none;
+    font-size: 12px;
+    color: #5f666b;
+  }
+
+  .date {
+    font-family: ui-monospace, monospace;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 18px;
+    margin-top: 12px;
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+
+  .modes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .modes button {
+    height: 32px;
+    padding: 0 12px;
+    border-radius: 3px;
+    background: var(--ink);
+    color: var(--stock);
+    font-family: var(--mono);
+    font-size: 12px;
+    transition: transform 160ms var(--out);
+  }
+
+  .modes button + button {
+    background: none;
+    color: var(--ink);
+    box-shadow: inset 0 0 0 1px var(--ink);
+  }
+
+  .modes button:active {
+    transform: scale(0.97);
+  }
+
+  .scrub {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--ink-2);
+  }
+
+  .scrub input {
+    width: 140px;
+    accent-color: var(--pink-ink);
+  }
+
+  .scrub output {
+    min-width: 7ch;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .show {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--ink-2);
+  }
+
+  .show input {
+    accent-color: var(--pink-ink);
+  }
+
+  .cap {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid var(--rule);
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-2);
+  }
+
+  @media (max-width: 479px) {
+    .row {
+      grid-template-columns: 36px minmax(0, 1fr);
+    }
+
+    .date {
+      grid-column: 2;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .row[data-mode="sweep"]::before,
+    .row[data-mode="fade"]::before {
+      animation: none;
+    }
+  }
+</style>
