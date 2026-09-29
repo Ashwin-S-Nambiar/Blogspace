@@ -1,0 +1,126 @@
+---
+title: Opening the case
+dek: MovieVault shows every film as a DVD case. Tapping one opens it in mid-air and flies it to the title page, and back does the whole thing in reverse. Here is how, and what went wrong on the way.
+date: 2026-09-29T10:00:00+05:30
+kind: deep dive
+tags: [movievault, motion, react, waapi]
+project:
+  name: MovieVault
+  live: https://movievault.ashwin.co.in
+  repo: https://github.com/Ashwin-S-Nambiar/MovieVault
+  notes: https://notes.ashwin.co.in/projects/MovieVault
+  stack: [React 19, React Router, Tailwind CSS 4, TMDB]
+---
+
+import Aside from '../../../components/Aside.astro';
+import Clip from '../../../components/Clip.astro';
+import flight from './case-flight.mp4';
+import flightPoster from './case-flight-poster.jpg';
+
+Every title in MovieVault sits on a shelf as a DVD case: a plastic edge, a spine, a poster behind the sleeve. Once the shelves looked like that, a plain crossfade to the title page felt wrong. You do not crossfade a DVD. You pull it off the shelf and open it.
+
+I had a screen recording of an app that did exactly that, and I cut it into frames to see what it was doing. The case opened the moment it was tapped, right where it sat, and then travelled to the page. Going back ran the same film backwards. MovieVault's first version did it the other way round: the cover flew across, landed, and only then flipped open. Opening late made the whole move feel like two moves.
+
+<Clip
+  src={flight}
+  poster={flightPoster}
+  length={8.5}
+  label="a Resident Evil case is pulled half off a shelf, swings open while it flies to the title page with its disc sliding out, then closes and flies back into its slot on the shelf"
+  caption="At a third of the speed, on the live site."
+  cues={[
+    { from: 0.8, to: 2.2, text: 'Hover pulls the case half off the shelf', x: 33, y: 18, w: 16, h: 33 },
+    { from: 2.2, to: 3.4, text: 'It swings open while it flies, disc and all', x: 45, y: 14 },
+    { from: 3.4, to: 5.8, text: 'It lands on the slot the title page measured for it', x: 6, y: 29, w: 37.5, h: 42 },
+    { from: 5.8, to: 6.3, text: 'Back: it holds still until the shelf is ready', x: 6, y: 29 },
+    { from: 6.3, to: 7.2, text: 'Then closes on the way home, into its own shadow', x: 33, y: 18, w: 16, h: 33 },
+  ]}
+/>
+
+## Not a view transition
+
+The rest of MovieVault moves between pages with view transitions, and the search pill glides from page to page on one. The case does not. A view transition takes a flat snapshot of the old element and the new one and morphs between them, which is perfect for a poster and useless for a case that has to swing its cover through 178 degrees and slide a disc out while it is moving.
+
+So the case flies in its own layer. When you tap, a fixed `.flight` element mounts over the whole app with a copy of the open case in it, and the real case on the shelf is hidden. From there it is three animations made with the Web Animations API, overlapping:
+
+- **the swing**, 400 ms: the cover turns to `rotateY(-178deg)`, the disc turns in from `-70deg` and fades up, and the inside of the sleeve fades in behind it.
+- **the leave**, 150 ms after the tap: the router navigates, and a veil the colour of the page fades the old page out under the case.
+- **the flight**, 560 ms, starting 260 ms in: a translate and scale from the shelf to the title page, on the iOS drawer curve, `cubic-bezier(0.32, 0.72, 0, 1)`.
+
+Because the flight starts before the swing has finished, the case is still opening as it takes off. That overlap is the whole trick.
+
+## Landing somewhere that does not exist yet
+
+The flight has to know where to go before the title page has rendered, because it starts before the navigation does. So on tap MovieVault builds a tiny fake title page, measures where the case would sit, and throws it away:
+
+```js
+const PROBE =
+  '<main class="detail"><div class="detail-grid"><div><div class="stage"><div><div class="ocase"></div></div></div></div></div></main>';
+
+function probeHome() {
+  const probe = document.createElement('div');
+  probe.className = 'hero-probe';
+  probe.innerHTML = PROBE;
+  document.body.append(probe);
+  const box = layoutBox(probe.querySelector('.ocase'));
+  probe.remove();
+  return box;
+}
+```
+
+The probe uses the real classes, so the real CSS lays it out: the same grid, the same clamp on the case width, the same breakpoints. It is right almost every time. When it is not (the page scrolled, a font was late), the real case reports its box as it mounts and the flight steers to it. A small miss just rewrites the end keyframe. A bigger one starts a fresh, shorter leg from wherever the case is right now, so it bends towards the right spot instead of jumping.
+
+<Aside label="The double cover">
+  The first version landed on top of the title page's own case, so for a moment there were two. Now both ends are hidden while the flight owns the case: the one on the shelf and the one waiting on the page.
+</Aside>
+
+That is also why nothing on the page shows through. The case on the title page is rendered hidden and only switched on at the instant the flight lets go, so the handover is a single frame.
+
+## Going back
+
+Back is harder, because the shelf you are going back to has to render first. React renders a history pop synchronously, so the case holds still under the veil through that commit, finds its slot on the shelf in the next frame, and only then closes and flies. Starting early was the stutter I kept seeing: the case began to move, the shelf appeared under it, and it corrected course.
+
+The search page has a second kind of shelf, spines only, where hovering slides the cover half out of its spine. Coming back to it, the cover has to slide back in, but only once the case is home. So the returning spine's reverse animation starts paused, and the flight marks the spine `data-landed` as it lets go:
+
+```css
+.shelf-spine[data-returning="true"]:not(:has([data-landed]))
+  :is(.spine-body, .pull-cover) {
+  animation-play-state: paused;
+}
+```
+
+## The shadow that arrived late
+
+For a while every landing ended with a small pop: the case arrived, then its shadow faded in a beat later. The flying copy had a different shadow from the resting one, and scaling the case down on the way home shrank its shadow with it, so the two never matched at the handover.
+
+The fix was to make the shadow a function of scale. `--sk` is a registered number property, and every shadow on a case is written in terms of it:
+
+```css
+@property --sk {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 1;
+}
+
+.poster,
+.cover-body,
+.pull-cover,
+.reel-item .case-front,
+.ocase-tray::after {
+  --shadow-case:
+    0 calc(22px * var(--sk)) calc(30px * var(--sk)) calc(-18px * var(--sk))
+    var(--case-shade-a),
+    0 calc(8px * var(--sk)) calc(12px * var(--sk)) calc(-8px * var(--sk))
+    var(--case-shade-b);
+}
+```
+
+A shelf declares the `--sk` its cases rest at. The case flying home is drawn at title page size and scaled down, so it sets its own `--sk` to the shelf's value times the inverse of that scale. The two cancel out, its shadow lands at exactly the size of the resting one, and when the real case appears the shadow is already there. The half-pulled cover on the spine shelf used a different shadow token, so it got folded into the same group.
+
+## Loose ends that matter
+
+- A flight never waits forever. If the destination does not claim the case in time, it fades and drops instead of hanging over the page.
+- `requestAnimationFrame` and the animation timeline stop while the tab is hidden, so switching tabs mid-flight releases it straight away.
+- With reduced motion on, there is no flight. The page just changes.
+- Cmd, Ctrl and Shift clicks are left alone, so opening a title in a new tab still works.
+
+The flight lives in `src/lib/hero.js`, about 500 lines, and none of it is a library. It is the most code in MovieVault spent on something that lasts under a second, and the part people poke at first.
