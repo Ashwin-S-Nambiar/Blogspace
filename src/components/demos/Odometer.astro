@@ -1,0 +1,296 @@
+---
+interface Props {
+  start?: number;
+  caption?: string;
+}
+
+const { start = 1299, caption } = Astro.props;
+---
+
+<figure class="fig odo" data-odo data-start={start}>
+  <div class="stage">
+    <div class="readout" aria-hidden="true"></div>
+    <p class="said sr" aria-live="polite">&nbsp;</p>
+  </div>
+  <div class="keys">
+    <button type="button" data-step="-1">−1</button>
+    <button type="button" data-step="1">+1</button>
+    <button type="button" data-step="-900">−900</button>
+    <button type="button" data-step="900">+900</button>
+    <button type="button" data-jump>Jump a place</button>
+  </div>
+  <fieldset class="rules">
+    <legend>Rules</legend>
+    <label><input type="checkbox" data-rule="dir" checked /><span>Every column rolls the way the value moved</span></label>
+    <label><input type="checkbox" data-rule="place" checked /><span>Columns keyed by place, not position</span></label>
+    <label><input type="checkbox" data-rule="tab" checked /><span>Every digit the same width</span></label>
+  </fieldset>
+  {caption && <figcaption class="cap">{caption}</figcaption>}
+</figure>
+
+<script>
+  const DIGITS = 10;
+  const ROWS = DIGITS * 2;
+  const digitAt = (row: number) => ((row % DIGITS) + DIGITS) % DIGITS;
+  type Dir = 'down' | 'up';
+
+  function rollTo(row: number, digit: number, dir: Dir) {
+    const down = dir === 'down';
+    const step = down
+      ? (digitAt(row) - digit + DIGITS) % DIGITS
+      : (digit - digitAt(row) + DIGITS) % DIGITS;
+    const next = down ? row - step : row + step;
+    if (next >= 0 && next < ROWS) return { rebase: null as number | null, row: next };
+    const rebase = down ? row + DIGITS : row - DIGITS;
+    return { rebase, row: down ? rebase - step : rebase + step };
+  }
+
+  const shortest = (from: number, to: number): Dir =>
+    (to - from + DIGITS) % DIGITS <= 5 ? 'up' : 'down';
+
+  for (const fig of document.querySelectorAll<HTMLElement>('[data-odo]')) {
+    const readout = fig.querySelector<HTMLElement>('.readout');
+    const said = fig.querySelector<HTMLElement>('.said');
+    if (!readout || !said) continue;
+    let value = Number(fig.dataset.start) || 0;
+    const rule = (k: string) =>
+      fig.querySelector<HTMLInputElement>(`[data-rule="${k}"]`)?.checked ?? true;
+    const cols = new Map<string, { el: HTMLElement; strip: HTMLElement; row: number; sizer: HTMLElement }>();
+
+    const column = (digit: number) => {
+      const el = document.createElement('span');
+      el.className = 'col';
+      const strip = document.createElement('span');
+      strip.className = 'strip';
+      for (let i = 0; i < ROWS; i++) {
+        const d = document.createElement('span');
+        d.textContent = String(i % DIGITS);
+        strip.append(d);
+      }
+      const sizer = document.createElement('span');
+      sizer.className = 'sizer';
+      sizer.textContent = String(digit);
+      el.append(sizer, strip);
+      const row = digit + DIGITS;
+      strip.style.setProperty('--row', String(row));
+      return { el, strip, row, sizer };
+    };
+
+    const render = (prev: number, next: number) => {
+      const digits = String(next);
+      const keys = [...digits].map((_, i) =>
+        rule('place') ? `p${digits.length - 1 - i}` : `i${i}`,
+      );
+      const valueDir: Dir = next < prev ? 'down' : 'up';
+      const seen = new Set<string>();
+      keys.forEach((key, i) => {
+        const digit = Number(digits[i]);
+        let c = cols.get(key);
+        if (!c) {
+          c = column(digit);
+          cols.set(key, c);
+          c.el.classList.add('entering');
+          requestAnimationFrame(() => c?.el.classList.remove('entering'));
+        }
+        seen.add(key);
+        readout.append(c.el);
+        if (digitAt(c.row) === digit) return;
+        const dir = rule('dir') ? valueDir : shortest(digitAt(c.row), digit);
+        const r = rollTo(c.row, digit, dir);
+        if (r.rebase !== null) {
+          c.strip.style.transition = 'none';
+          c.strip.style.setProperty('--row', String(r.rebase));
+          void c.strip.offsetHeight;
+          c.strip.style.transition = '';
+        }
+        c.strip.style.setProperty('--row', String(r.row));
+        c.row = r.row;
+        c.sizer.textContent = String(digit);
+      });
+      for (const [key, c] of cols) {
+        if (seen.has(key)) continue;
+        cols.delete(key);
+        c.el.classList.add('leaving');
+        setTimeout(() => c.el.remove(), 460);
+      }
+      said.textContent = String(next);
+    };
+
+    const set = (next: number) => {
+      const prev = value;
+      value = Math.max(0, Math.min(99999, next));
+      render(prev, value);
+    };
+
+    fig.classList.toggle('prop', !rule('tab'));
+    render(value, value);
+
+    for (const b of fig.querySelectorAll<HTMLButtonElement>('[data-step]')) {
+      b.addEventListener('click', () => set(value + Number(b.dataset.step)));
+    }
+    fig.querySelector('[data-jump]')?.addEventListener('click', () => {
+      set(value >= 1000 ? value % 1000 : value + 1000 * (1 + Math.floor(Math.random() * 8)));
+    });
+    for (const box of fig.querySelectorAll<HTMLInputElement>('[data-rule]')) {
+      box.addEventListener('change', () => {
+        if (box.dataset.rule === 'tab') fig.classList.toggle('prop', !box.checked);
+        if (box.dataset.rule === 'place') {
+          for (const c of cols.values()) c.el.remove();
+          cols.clear();
+          render(value, value);
+        }
+      });
+    }
+  }
+</script>
+
+<style>
+  .stage {
+    display: grid;
+    place-items: center;
+    gap: 6px;
+    padding: clamp(24px, 6vw, 44px) 12px;
+    border-radius: 2px;
+    background: var(--stock) var(--grain);
+    box-shadow: 0 0 0 1px var(--rule);
+  }
+
+  .readout {
+    display: flex;
+    font-family: var(--display);
+    font-weight: 850;
+    font-stretch: 62%;
+    font-size: clamp(64px, 14vw, 112px);
+    line-height: 1;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .prop .readout {
+    font-variant-numeric: proportional-nums;
+  }
+
+  .readout :global(.col) {
+    position: relative;
+    display: block;
+    height: 1em;
+    overflow: hidden;
+    transition:
+      opacity 300ms var(--out),
+      max-width 300ms var(--out);
+    max-width: 1em;
+  }
+
+  .readout :global(.col.entering),
+  .readout :global(.col.leaving) {
+    opacity: 0;
+    max-width: 0;
+  }
+
+  .readout :global(.sizer) {
+    display: block;
+    visibility: hidden;
+  }
+
+  .readout :global(.strip) {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    transform: translateY(calc(var(--row) * -1em));
+    transition: transform 460ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .readout :global(.strip > span) {
+    display: block;
+    height: 1em;
+    text-align: center;
+  }
+
+  .keys {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 12px;
+  }
+
+  .keys button {
+    height: 34px;
+    min-width: 52px;
+    padding: 0 12px;
+    border-radius: 3px;
+    box-shadow: inset 0 0 0 1px var(--ink);
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    transition:
+      transform 160ms var(--out),
+      background-color 160ms ease;
+  }
+
+  .keys button:active {
+    transform: scale(0.97);
+  }
+
+  .keys [data-jump] {
+    margin-left: auto;
+    background: var(--ink);
+    color: var(--stock);
+  }
+
+  .rules {
+    display: grid;
+    gap: 6px;
+    margin: 12px 0 0;
+    padding: 10px 0 0;
+    border: 0;
+    border-top: 1px solid var(--rule);
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+
+  .rules legend {
+    float: left;
+    margin-bottom: 4px;
+    color: var(--pink-ink);
+    font-size: 11px;
+  }
+
+  .rules label {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    clear: both;
+    color: var(--ink);
+    line-height: 1.45;
+  }
+
+  .rules input {
+    margin-top: 2px;
+    accent-color: var(--pink-ink);
+  }
+
+  .cap {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid var(--rule);
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-2);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .keys button:not([data-jump]):hover {
+      background: var(--hover);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .readout :global(.strip) {
+      transition: none;
+    }
+  }
+</style>

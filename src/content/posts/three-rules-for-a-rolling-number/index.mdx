@@ -1,0 +1,52 @@
+---
+title: Three rules for a rolling number
+dek: The odometer roll in my portfolio labs looks like one animation. It is really three small rules, and each one fixes a bug you only see once you look for it. Switch them off below and watch it break.
+date: 2026-09-29T15:00:00+05:30
+kind: note
+tags: [labs, motion, css]
+project:
+  name: Odometer Roll, a portfolio lab
+  live: https://ashwin.co.in/labs/odometer
+  stack: [CSS transforms, TypeScript]
+---
+
+import Aside from '../../../components/Aside.astro';
+import Odometer from '../../../components/demos/Odometer.astro';
+
+A rolling number is one of those details that is everywhere now: a count ticks up and each digit spins into place like the mileage on an old car. I built one as a lab for my portfolio, and the same idea rolls the totals on Chit's receipt and the counts in QuizzMe. It looked done the day I built it. Then I started pressing buttons.
+
+Here it is with all three rules on. Press the buttons, then switch a rule off and do the same thing again.
+
+<Odometer start={1299} caption="A copy of the lab's roll, written from the same source. Start at 1299 and press +1 to cross a carry." />
+
+## How a column rolls
+
+Each digit is a column that only shows one row at a time. Inside it is a strip of the digits 0 to 9, twice over: twenty rows. The column shows row `--row`, and rolling is just `translateY(calc(var(--row) * -1em))` with a transition.
+
+Two copies means a digit can always roll either way without running off the end. Going from 8 to 1 upwards passes 9, 0 and lands on the 1 in the second copy. If the next roll would go past either end, the strip first jumps, with no transition, to the same digit in the other copy, then rolls from there. You never see the jump because both rows show the same digit.
+
+## Rule one: the value picks the direction
+
+The obvious rule is that each column takes its shortest way round to its new digit. Try 1305 going down to 1297. The hundreds go 3 to 2, back one. The tens go 0 to 9, back one. The ones go 5 to 7, and the shortest way there is forward two. So in a number that just went down, one column rolls up. It is a split second, and it looks like a glitch every time.
+
+The fix is to stop asking each column. If the whole number went up, every column rolls up, and if it went down, every column rolls down. The ones going from 5 back to 7 now takes eight steps instead of two, but nothing ever rolls against the number. Switch "rolls the way the value moved" off in the demo, press −1 on 1300 a few times and then −900, and watch for a column going the wrong way.
+
+## Rule two: a column is a place, not a position
+
+When 1234 loses its thousands and becomes 234, the natural thing is to render the digits as a list and let the framework match them by index. Index 0 was the 1, now it is the 2. Index 1 was the 2, now it is the 3. Every column rolls, and the 2, 3 and 4 that never changed spin to show digits that were already on screen one place over.
+
+The fix is to key columns by their place value: ones, tens, hundreds, thousands. The ones column is the ones column whatever the length of the number, so dropping the thousands removes one column, and the three that stayed do not move at all. Switch "keyed by place" off in the demo and press "Jump a place" to see every survivor roll for no reason.
+
+<Aside label="Leaving gracefully">
+  A place that is dropped does not just vanish. It fades and closes its width while the others stay put, so the number shortens instead of snapping. That was its own bug: unmounting it mid frame made the rest jump.
+</Aside>
+
+## Rule three: every digit is the same width
+
+In most fonts a 1 is narrower than an 8. So when the ones column rolls from 1 to 8, it gets wider, and everything to its left shuffles over by a hair. On a count that ticks every second, the whole readout shivers where it stands.
+
+`font-variant-numeric: tabular-nums` gives every digit the same advance, so a column is the same width whatever it shows. Turn it off in the demo and press +1 a few times: the digits nudge each other sideways as they roll. This is the same bug Tenzies had in its roll counter, and the same one line fixed it.
+
+## Why it is worth the fuss
+
+None of these are visible in a screenshot. They only show up in motion, in the half second after a click, which is exactly where people are looking. A number that rolls the wrong way, spins digits that did not change, or wobbles in place reads as broken even if nobody could say why.
