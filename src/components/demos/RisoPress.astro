@@ -1,0 +1,386 @@
+---
+interface Props {
+  caption?: string;
+}
+
+const { caption } = Astro.props;
+---
+
+<figure class="fig rp" data-rp>
+  <div class="sheet">
+    <canvas width="480" height="300" aria-label="Four riso plates, yellow, pink, green and blue, printed onto paper as halftone dots"></canvas>
+  </div>
+  <div class="controls">
+    <label>
+      <span>Plates</span>
+      <input type="range" min="1" max="4" step="1" value="4" data-k="plates" />
+      <output>4</output>
+    </label>
+    <label>
+      <span>Misregister</span>
+      <input type="range" min="0" max="8" step="0.5" value="1.5" data-k="slip" />
+      <output>1.5 px</output>
+    </label>
+    <label>
+      <span>Dot pitch</span>
+      <input type="range" min="2" max="9" step="0.5" value="3.5" data-k="pitch" />
+      <output>3.5 px</output>
+    </label>
+    <label class="tog">
+      <input type="checkbox" checked data-k="screened" />
+      <span>Halftone</span>
+    </label>
+  </div>
+  <ol class="inks" aria-label="Print order">
+    <li><i style="background:#ffe800"></i>Yellow, 0°</li>
+    <li><i style="background:#ff48b0"></i>Pink, 75°</li>
+    <li><i style="background:#00a95c"></i>Green, 45°</li>
+    <li><i style="background:#0078bf"></i>Blue, 15°</li>
+  </ol>
+  {caption && <figcaption class="cap">{caption}</figcaption>}
+</figure>
+
+<script>
+  const INKS = [
+    { rgb: [0xff, 0xe8, 0x00], angle: 0, slip: [-0.7, 0.35], key: 'yellow' },
+    { rgb: [0xff, 0x48, 0xb0], angle: 75, slip: [1, 0.45], key: 'pink' },
+    { rgb: [0x00, 0xa9, 0x5c], angle: 45, slip: [-0.35, -1], key: 'green' },
+    { rgb: [0x00, 0x78, 0xbf], angle: 15, slip: [0.3, 0.85], key: 'blue' },
+  ];
+  const PAPER = [0xf2, 0xed, 0xe3];
+  const DENSITY = 0.92;
+
+  function rngFor(key: string) {
+    let a = 2166136261;
+    for (let i = 0; i < key.length; i++) {
+      a ^= key.charCodeAt(i);
+      a = Math.imul(a, 16777619);
+    }
+    a >>>= 0;
+    return () => {
+      a = (a + 0x6d2b79f5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  function field(w: number, h: number, key: string, cell: number, octaves = 3) {
+    const out = new Float32Array(w * h);
+    let amp = 1;
+    let total = 0;
+    for (let o = 0; o < octaves; o++) {
+      const size = Math.max(2, cell / 2 ** o);
+      const gw = Math.ceil(w / size) + 2;
+      const gh = Math.ceil(h / size) + 2;
+      const rng = rngFor(`${key}:${o}`);
+      const grid = new Float32Array(gw * gh);
+      for (let i = 0; i < grid.length; i++) grid[i] = rng();
+      for (let y = 0; y < h; y++) {
+        const gy = y / size;
+        const y0 = Math.floor(gy);
+        let fy = gy - y0;
+        fy = fy * fy * (3 - 2 * fy);
+        for (let x = 0; x < w; x++) {
+          const gx = x / size;
+          const x0 = Math.floor(gx);
+          let fx = gx - x0;
+          fx = fx * fx * (3 - 2 * fx);
+          const i = y0 * gw + x0;
+          const top = grid[i] + (grid[i + 1] - grid[i]) * fx;
+          const bot = grid[i + gw] + (grid[i + gw + 1] - grid[i + gw]) * fx;
+          out[y * w + x] += (top + (bot - top) * fy) * amp;
+        }
+      }
+      total += amp;
+      amp *= 0.5;
+    }
+    for (let i = 0; i < out.length; i++) out[i] /= total;
+    return out;
+  }
+
+  function screen(w: number, h: number, pitch: number, angle: number, key: string) {
+    const out = new Uint8Array(w * h);
+    const rad = (angle * Math.PI) / 180;
+    const c = Math.cos(rad) / pitch;
+    const s = Math.sin(rad) / pitch;
+    const rng = rngFor(`screen:${key}`);
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        const u = x * c + y * s;
+        const v = y * c - x * s;
+        const fu = u - Math.floor(u) - 0.5;
+        const fv = v - Math.floor(v) - 0.5;
+        const d = fu * fu + fv * fv;
+        const area = d <= 0.25 ? Math.PI * d : 0.785 + ((d - 0.25) / 0.25) * 0.215;
+        const t = area + (rng() - 0.5) * 0.14;
+        out[y * w + x] = Math.max(1, Math.min(255, Math.round(t * 255)));
+      }
+    }
+    return out;
+  }
+
+  function starvation(w: number, h: number, key: string) {
+    const blotch = field(w, h, `starve:${key}`, 90, 3);
+    const rng = rngFor(`void:${key}`);
+    const out = new Uint8Array(w * h);
+    for (let i = 0; i < out.length; i++) {
+      const v = 0.72 + blotch[i] * 0.36 - (rng() < 0.012 ? 0.6 : 0);
+      out[i] = Math.round(Math.max(0, Math.min(1, v)) * 255);
+    }
+    return out;
+  }
+
+  function stock(w: number, h: number) {
+    const cloud = field(w, h, 'paper:cloud', 60, 4);
+    const rng = rngFor('paper:fleck');
+    const out = new Uint8ClampedArray(w * h * 4);
+    for (let i = 0; i < w * h; i++) {
+      const shade = (cloud[i] - 0.5) * 16 + (rng() - 0.5) * 5 - (rng() < 0.003 ? 18 : 0);
+      out[i * 4] = PAPER[0] + shade;
+      out[i * 4 + 1] = PAPER[1] + shade;
+      out[i * 4 + 2] = PAPER[2] + shade * 1.15;
+      out[i * 4 + 3] = 255;
+    }
+    return out;
+  }
+
+  function plate(w: number, h: number, draw: (g: OffscreenCanvasRenderingContext2D) => void) {
+    const c = new OffscreenCanvas(w, h);
+    const g = c.getContext('2d');
+    if (!g) return new Uint8ClampedArray(w * h * 4);
+    g.fillStyle = '#000';
+    draw(g);
+    return g.getImageData(0, 0, w, h).data;
+  }
+
+  function art(w: number, h: number) {
+    const tone = (g: OffscreenCanvasRenderingContext2D, a: number) => {
+      g.globalAlpha = a;
+    };
+    return [
+      plate(w, h, (g) => {
+        const sun = g.createRadialGradient(360, 90, 10, 360, 90, 80);
+        sun.addColorStop(0, 'rgba(0,0,0,1)');
+        sun.addColorStop(1, 'rgba(0,0,0,0.25)');
+        g.fillStyle = sun;
+        g.beginPath();
+        g.arc(360, 90, 70, 0, Math.PI * 2);
+        g.fill();
+        tone(g, 0.55);
+        g.fillStyle = '#000';
+        g.fillRect(0, 210, w, 90);
+      }),
+      plate(w, h, (g) => {
+        tone(g, 0.8);
+        g.beginPath();
+        g.arc(360, 90, 52, 0, Math.PI * 2);
+        g.lineWidth = 16;
+        g.strokeStyle = '#000';
+        g.stroke();
+        tone(g, 0.35);
+        g.fillRect(40, 40, 170, 110);
+      }),
+      plate(w, h, (g) => {
+        const sea = g.createLinearGradient(0, 150, 0, 300);
+        sea.addColorStop(0, 'rgba(0,0,0,0.15)');
+        sea.addColorStop(1, 'rgba(0,0,0,0.8)');
+        g.fillStyle = sea;
+        g.beginPath();
+        g.moveTo(0, 190);
+        for (let x = 0; x <= w; x += 20) g.lineTo(x, 180 + Math.sin(x / 38) * 12);
+        g.lineTo(w, h);
+        g.lineTo(0, h);
+        g.fill();
+      }),
+      plate(w, h, (g) => {
+        tone(g, 0.7);
+        g.beginPath();
+        g.ellipse(130, 230, 90, 44, -0.2, 0, Math.PI * 2);
+        g.fill();
+        tone(g, 0.45);
+        g.fillRect(40, 40, 170, 110);
+        tone(g, 0.9);
+        g.beginPath();
+        g.ellipse(400, 250, 60, 30, 0.3, 0, Math.PI * 2);
+        g.fill();
+      }),
+    ];
+  }
+
+  for (const fig of document.querySelectorAll<HTMLElement>('[data-rp]')) {
+    const canvas = fig.querySelector('canvas');
+    const ctx = canvas?.getContext('2d');
+    if (!canvas || !ctx) continue;
+    const { width: w, height: h } = canvas;
+    let ready = false;
+    let base: Uint8ClampedArray;
+    let starve: Uint8Array[];
+    let cover: Uint8ClampedArray[];
+    let screens: Uint8Array[] = [];
+    let pitchFor = 0;
+    let queued = 0;
+    const input = (k: string) => fig.querySelector<HTMLInputElement>(`[data-k="${k}"]`);
+
+    const print = () => {
+      queued = 0;
+      if (!ready) {
+        base = stock(w, h);
+        starve = INKS.map((ink) => starvation(w, h, ink.key));
+        cover = art(w, h);
+        ready = true;
+      }
+      const plates = Number(input('plates')?.value ?? 4);
+      const slip = Number(input('slip')?.value ?? 1.5);
+      const pitch = Number(input('pitch')?.value ?? 3.5);
+      const screened = input('screened')?.checked ?? true;
+      if (pitch !== pitchFor) {
+        screens = INKS.map((ink) => screen(w, h, pitch, ink.angle, ink.key));
+        pitchFor = pitch;
+      }
+      const soft = pitch / 2.5;
+      const img = ctx.createImageData(w, h);
+      const out = img.data;
+      out.set(base);
+      for (let k = 0; k < plates; k++) {
+        const cov = cover[k];
+        const th = screens[k];
+        const st = starve[k];
+        const ab = INKS[k].rgb.map((c) => (1 - c / 255) * DENSITY);
+        const dx = Math.round(INKS[k].slip[0] * slip);
+        const dy = Math.round(INKS[k].slip[1] * slip);
+        for (let y = 0; y < h; y++) {
+          const sy = y - dy;
+          if (sy < 0 || sy >= h) continue;
+          for (let x = Math.max(0, dx); x < Math.min(w, w + dx); x++) {
+            const c = cov[(sy * w + x - dx) * 4 + 3];
+            if (c === 0) continue;
+            const i = y * w + x;
+            let a: number;
+            if (!screened) a = c / 255;
+            else if (c === 255) a = 1;
+            else {
+              a = ((c - th[i]) / 255) * soft + 0.5;
+              if (a <= 0) continue;
+              if (a > 1) a = 1;
+            }
+            a *= st[i] / 255;
+            const p = i * 4;
+            out[p] *= 1 - a * ab[0];
+            out[p + 1] *= 1 - a * ab[1];
+            out[p + 2] *= 1 - a * ab[2];
+          }
+        }
+      }
+      ctx.putImageData(img, 0, 0);
+      for (const li of fig.querySelectorAll('.inks li')) {
+        const idx = [...fig.querySelectorAll('.inks li')].indexOf(li);
+        li.toggleAttribute('data-off', idx >= plates);
+      }
+    };
+
+    const units: Record<string, string> = { slip: ' px', pitch: ' px' };
+    for (const el of fig.querySelectorAll<HTMLInputElement>('[data-k]')) {
+      el.addEventListener('input', () => {
+        const out = el.closest('label')?.querySelector('output');
+        if (out) out.textContent = `${el.value}${units[el.dataset.k ?? ''] ?? ''}`;
+        if (!queued) queued = requestAnimationFrame(print);
+      });
+    }
+    new IntersectionObserver(
+      ([e], io) => {
+        if (!e.isIntersecting) return;
+        print();
+        io.disconnect();
+      },
+      { rootMargin: '300px' },
+    ).observe(fig);
+  }
+</script>
+
+<style>
+  .sheet {
+    border-radius: 2px;
+    overflow: hidden;
+    background: #f2ede3;
+    box-shadow: 0 0 0 1px var(--rule);
+  }
+
+  canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 480 / 300;
+    image-rendering: auto;
+  }
+
+  .controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr));
+    gap: 8px 18px;
+    margin-top: 12px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-2);
+  }
+
+  label {
+    display: grid;
+    grid-template-columns: 11ch minmax(0, 1fr) 6ch;
+    align-items: center;
+    gap: 8px;
+  }
+
+  label.tog {
+    display: flex;
+  }
+
+  input {
+    min-width: 0;
+    accent-color: var(--pink-ink);
+  }
+
+  output {
+    color: var(--ink);
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .inks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+    margin-top: 12px;
+    padding: 10px 0 0;
+    border-top: 1px solid var(--rule);
+    list-style: none;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink);
+  }
+
+  .inks li {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: opacity 160ms ease;
+  }
+
+  .inks li[data-off] {
+    opacity: 0.35;
+  }
+
+  .inks i {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    mix-blend-mode: multiply;
+  }
+
+  .cap {
+    margin-top: 10px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-2);
+  }
+</style>

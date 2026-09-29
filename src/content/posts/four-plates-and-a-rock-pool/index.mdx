@@ -1,0 +1,69 @@
+---
+title: Four plates and a rock pool
+dek: Riso Tide is a lab on my portfolio, a rock pool going through one tide, printed in four risograph inks. It is not a filter over a picture. It is four pictures, screened and pulled one at a time, twelve times a second.
+date: 2026-09-29T16:00:00+05:30
+kind: deep dive
+tags: [labs, canvas, riso, motion]
+project:
+  name: Riso Tide, a portfolio lab
+  live: https://ashwin.co.in/labs/riso
+  stack: [Canvas 2D, TypeScript, a web worker]
+---
+
+import Aside from '../../../components/Aside.astro';
+import Clip from '../../../components/Clip.astro';
+import RisoPress from '../../../components/demos/RisoPress.astro';
+import tide from './tide.mp4';
+import tidePoster from './tide-poster.jpg';
+
+BlogSpace looks like a riso zine, but it cheats: two flat colours, one blend mode and a few halftone patterns. I wanted to know what it would take to actually print like a risograph on a screen, with moving pictures. Riso Tide is the answer, a rock pool that the tide goes out of and comes back into, with a crab.
+
+The idea came from sevenevesai's [riso-windowseat](https://github.com/sevenevesai/riso-windowseat), which makes whole films this way. Mine is a lab: small, one scene, and the controls to take it apart.
+
+<Clip
+  src={tide}
+  poster={tidePoster}
+  length={12}
+  label="a rock pool printed in yellow, pink, green and blue halftone: sand, blue rocks, a green net and starfish, as the tide washes in over everything and back out, and a crab walks across"
+  caption="One tide, from the lab's showcase clip."
+/>
+
+## A print is four pictures
+
+A risograph does not print colour. It prints one ink at a time from a stencil, one pass through the machine per ink, and the colours you see are only where inks land on top of each other. Riso Tide uses four: yellow, fluorescent pink, green and blue. There is no black. The dark rocks are pink, green and blue stacked.
+
+So the scene is drawn four times every frame, once per ink, and each drawing is not a colour at all, just how much of that ink should go down at each point. The yellow plate has the sand and the sun, the green plate has the water, and the rocks are on three plates at once.
+
+## Screening
+
+A riso ink is either there or not, so a half tone of blue has to be made of dots: big dots where the tone is dark, small ones where it is light. That is a halftone screen, and each ink gets its own screen at its own angle (0°, 75°, 45° and 15°), because four screens at the same angle would lock into a moiré pattern.
+
+The screens are baked once into threshold maps. For every pixel, how much tone does it take before this pixel inks? The maths makes the threshold equal to dot area, so a 40% tone inks 40% of each cell, and a little noise goes in so the dots are not machine perfect. Printing a plate is then one comparison per pixel, softened at the rim of each dot so the dots are round rather than jagged:
+
+```ts
+a = ((c - th[i]!) / 255) * soft + 0.5;
+```
+
+The screens are fixed to the sheet, not to the drawing. When the tide moves, the water slides under the dots instead of dragging them along, which is how a printed flipbook looks and what keeps the texture from swimming.
+
+## The things that make it look printed
+
+Take it apart yourself. This is the same press, the same inks, screen maths and paper, printing four simple plates instead of a rock pool.
+
+<RisoPress caption="The lab's press, ported to run here. Turn plates down to see what each ink adds, and turn halftone off to see the flat picture it screens." />
+
+- **Plates.** Turn it to 1 and you have yellow alone. Each plate you add only darkens what is under it, the way ink does, so the rectangle where pink and blue overlap goes a deep violet you never drew.
+- **Misregister.** Each plate slips a fixed direction, a pixel or two. On paper the drum never quite lines up, and a picture that is perfectly registered looks like a screenshot.
+- **Starvation.** Look closely at a flat area and it is blotchy: a noise field thins the ink where the drum ran short, and a few pixels miss entirely.
+- **Density.** Each ink absorbs at most 92% of its colour, so even three inks stacked never reach flat black. The darkest thing on the page is still ink on paper.
+- **Paper.** The stock is warm off-white with a cloudy grain and a few flecks, drawn once.
+
+<Aside label="No filter">
+  None of this is a CSS filter or a shader. It is plain JavaScript over the pixels of a canvas, and the full lab runs the press in a web worker so the page stays responsive.
+</Aside>
+
+## On twos
+
+The lab runs at twelve frames a second. That is how printed and hand drawn animation moves, each drawing held for two frames of a 24 frame second, and the slightly stepped motion is part of the look. It is also what makes a per-pixel press possible at all: four plates, a screen test and three multiplies per pixel per plate, twelve times a second, fits comfortably inside a frame. Sixty would not.
+
+Riso is the look this blog borrows, so it felt right to show what the real thing takes. The two ink covers here are a cartoon of it. Riso Tide is the attempt at the full print.
