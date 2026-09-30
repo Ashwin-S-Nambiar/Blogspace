@@ -73,12 +73,27 @@ const home = Astro.url.pathname === '/';
             history.replaceState({ ...history.state, y: scrollY }, '');
           } catch {}
         };
-        addEventListener('pageswap', save);
+        // Rows keep their names only between lists. Named, they paint above the
+        // whole incoming page, so on the way to or from a post they hung over
+        // it as pale boxes. Only the title that morphs into the post keeps one.
+        const unname = (other) => {
+          const path = other ? new URL(other).pathname : '';
+          const post = path.startsWith('/posts/');
+          d.classList.toggle('vt-post', post);
+          for (const t of document.querySelectorAll('.row-t')) {
+            t.classList.toggle('vt-keep', post && new URL(t.closest('a').href).pathname === path);
+          }
+        };
+        addEventListener('pageswap', (e) => {
+          save();
+          if (e.viewTransition) unname(e.activation?.entry?.url);
+        });
         addEventListener('pagehide', save);
         addEventListener('pagereveal', (e) => {
           if (e.viewTransition) d.classList.add('ready', 'instant');
           if (!managed) return;
           const act = navigation.activation;
+          if (e.viewTransition) unname(act?.from?.url);
           const type = act?.navigationType;
           if (e.viewTransition && e.viewTransition.types) {
             const back = type === 'traverse' && act.entry && act.from && act.entry.index < act.from.index;

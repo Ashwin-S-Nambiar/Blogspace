@@ -919,6 +919,24 @@ html:active-view-transition-type(back)::view-transition-new(root) {
   height: 100%;
 }
 
+.vt-post .row-link,
+.vt-post .row-t:not(.vt-keep) {
+  view-transition-name: none !important;
+}
+
+/* A row or title with no partner on the other page leaves and arrives with the
+   page. On the 380ms group clock it outlived the page fade and hung over the
+   next page as a pale box. */
+::view-transition-old(.row):only-child,
+::view-transition-old(.hero-title):only-child {
+  animation: vt-out 180ms ease-in both;
+}
+
+::view-transition-new(.row):only-child,
+::view-transition-new(.hero-title):only-child {
+  animation: vt-in 300ms var(--out) both;
+}
+
 ::view-transition-old(top),
 ::view-transition-new(top),
 ::view-transition-old(credit),
