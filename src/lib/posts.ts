@@ -45,7 +45,27 @@ export const vt = (post: Post) => post.id.replace(/[^a-z0-9-]/gi, '-');
 
 export const kindLabel = (k: string) => k[0].toUpperCase() + k.slice(1);
 
-export const tagLabel = (t: string) => t[0].toUpperCase() + t.slice(1).replace(/-/g, ' ');
+const tagNames: Record<string, string> = {
+  css: 'CSS',
+  svg: 'SVG',
+  oklch: 'OKLCH',
+  waapi: 'WAAPI',
+  webgl: 'WebGL',
+  maplibre: 'MapLibre',
+  'three-js': 'Three.js',
+  react: 'React',
+  fandeck: 'Fandeck',
+  inspect: 'Inspect',
+  movievault: 'MovieVault',
+  redline: 'Redline',
+  stampbook: 'Stampbook',
+  tenzies: 'Tenzies',
+};
+
+export const tagName = (t: string) => tagNames[t] ?? t.replace(/-/g, ' ');
+
+export const tagLabel = (t: string) =>
+  tagNames[t] ?? t[0].toUpperCase() + t.slice(1).replace(/-/g, ' ');
 
 const clips = import.meta.glob<string>('/src/content/posts/**/*.mp4', {
   eager: true,
