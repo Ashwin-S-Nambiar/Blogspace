@@ -73,9 +73,6 @@ const home = Astro.url.pathname === '/';
             history.replaceState({ ...history.state, y: scrollY }, '');
           } catch {}
         };
-        // Rows keep their names only between lists. Named, they paint above the
-        // whole incoming page, so on the way to or from a post they hung over
-        // it as pale boxes. Only the title that morphs into the post keeps one.
         const unname = (other) => {
           const path = other ? new URL(other).pathname : '';
           const post = path.startsWith('/posts/');
@@ -83,10 +80,18 @@ const home = Astro.url.pathname === '/';
           for (const t of document.querySelectorAll('.row-t')) {
             t.classList.toggle('vt-keep', post && new URL(t.closest('a').href).pathname === path);
           }
+          for (const t of document.querySelectorAll('.vt-solo')) t.classList.remove('vt-solo');
         };
+        const seen = (el) => {
+          const r = el.getBoundingClientRect();
+          return r.top >= 0 && r.bottom <= innerHeight;
+        };
+        const heroes = () => document.querySelectorAll('.row-t.vt-keep, .post-title');
         addEventListener('pageswap', (e) => {
           save();
-          if (e.viewTransition) unname(e.activation?.entry?.url);
+          if (!e.viewTransition) return;
+          unname(e.activation?.entry?.url);
+          for (const t of heroes()) if (!seen(t)) t.classList.add('vt-solo');
         });
         addEventListener('pagehide', save);
         addEventListener('pagereveal', (e) => {
@@ -102,7 +107,28 @@ const home = Astro.url.pathname === '/';
           const y = history.state?.y;
           if ((type === 'traverse' || type === 'reload') && typeof y === 'number') scrollTo(0, y);
           else if (!location.hash) scrollTo(0, 0);
+          if (!e.viewTransition) return;
+          const row = document.querySelector('.row-t.vt-keep');
+          if (row && !seen(row)) {
+            const r = row.getBoundingClientRect();
+            scrollTo(0, Math.max(0, scrollY + r.top - (innerHeight - r.height) / 2));
+          }
+          for (const t of heroes()) if (!seen(t)) t.classList.add('vt-solo');
+          e.viewTransition.ready.then(pace, () => {});
         });
+        const pace = () => {
+          const title = d
+            .getAnimations({ subtree: true })
+            .filter((a) => a.effect?.pseudoElement?.includes('(title-'));
+          const group = title.find((a) => a.effect.pseudoElement.startsWith('::view-transition-group'));
+          if (!group) return;
+          const [from, to] = [group.effect.getKeyframes()[0], group.effect.getKeyframes().at(-1)].map(
+            (k) => new DOMMatrix(k.transform),
+          );
+          const far = Math.hypot(to.e - from.e, to.f - from.f);
+          const duration = Math.min(600, Math.max(360, 320 + far * 0.3));
+          for (const a of title) a.effect.updateTiming({ duration });
+        };
         const css = getComputedStyle(d);
         const first = (v) => css.getPropertyValue(v).split(',')[0].trim();
         const fonts = document.fonts

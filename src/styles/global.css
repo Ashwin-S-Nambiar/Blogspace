@@ -372,6 +372,8 @@ em {
 .row-t {
   position: relative;
   width: fit-content;
+  margin-block: 3px;
+  line-height: 1.3;
   font-weight: 480;
   color: var(--strong);
   text-wrap: balance;
@@ -906,12 +908,41 @@ html:active-view-transition-type(back)::view-transition-new(root) {
   animation-timing-function: var(--drawer);
 }
 
+::view-transition-group(.hero-title) {
+  animation-timing-function: cubic-bezier(0.5, 0, 0.1, 1);
+}
+
 ::view-transition-old(.hero-title),
 ::view-transition-new(.hero-title) {
   width: auto;
   height: 100%;
-  object-fit: none;
-  object-position: left top;
+  animation-timing-function: linear;
+}
+
+::view-transition-old(.hero-title) {
+  animation-name: title-out;
+}
+
+::view-transition-new(.hero-title) {
+  animation-name: title-in;
+}
+
+@keyframes title-out {
+  40%,
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes title-in {
+  from {
+    opacity: 0;
+  }
+
+  40%,
+  to {
+    opacity: 1;
+  }
 }
 
 ::view-transition-old(.row),
@@ -920,13 +951,11 @@ html:active-view-transition-type(back)::view-transition-new(root) {
 }
 
 .vt-post .row-link,
-.vt-post .row-t:not(.vt-keep) {
+.vt-post .row-t:not(.vt-keep),
+.vt-solo {
   view-transition-name: none !important;
 }
 
-/* A row or title with no partner on the other page leaves and arrives with the
-   page. On the 380ms group clock it outlived the page fade and hung over the
-   next page as a pale box. */
 ::view-transition-old(.row):only-child,
 ::view-transition-old(.hero-title):only-child {
   animation: vt-out 180ms ease-in both;
