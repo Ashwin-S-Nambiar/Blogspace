@@ -136,15 +136,32 @@ const links = project && [
 
     const back = document.querySelector<HTMLAnchorElement>('.back');
     const nav = (window as { navigation?: Navigation }).navigation;
-    const index = nav?.currentEntry?.index ?? -1;
-    const prev = nav && index > 0 ? nav.entries()[index - 1] : undefined;
-    const from = prev?.url ? new URL(prev.url) : undefined;
-    if (back && nav?.canGoBack && from && from.origin === location.origin && (from.pathname === '/' || from.pathname.startsWith('/tags/'))) {
-      back.href = from.pathname;
+    const origin = () => {
+      const current = nav?.currentEntry;
+      if (!current) return;
+      const entries = nav.entries();
+      for (let i = current.index - 1; i >= 0; i--) {
+        const url = entries[i].url ? new URL(entries[i].url as string) : undefined;
+        if (!url || url.origin !== location.origin) return;
+        if (url.pathname === location.pathname) continue;
+        return url.pathname === '/' || url.pathname.startsWith('/tags/') ? { entry: entries[i], path: url.pathname } : undefined;
+      }
+    };
+    if (back && nav) {
+      const sync = () => {
+        back.href = origin()?.path ?? '/';
+      };
+      sync();
+      addEventListener('pageshow', sync);
+      addEventListener('hashchange', sync);
       back.addEventListener('click', (e) => {
         if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+        const found = origin();
+        if (!found) return;
         e.preventDefault();
-        history.back();
+        nav.traverseTo(found.entry.key).finished?.catch((err) => {
+          if (err?.name !== 'AbortError') location.href = found.path;
+        });
       });
     }
 
