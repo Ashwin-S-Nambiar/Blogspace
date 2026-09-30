@@ -88,16 +88,16 @@ const links = project && [
     {post.data.related.length > 0 && <Related items={post.data.related} />}
     {(newer || older) && (
       <nav class="pager" aria-label="More writing">
-        {older && (
-          <a class="prev" href={`/posts/${older.id}/`}>
-            <span>Older</span>
-            <b>{older.data.title}</b>
-          </a>
-        )}
         {newer && (
-          <a class="next" href={`/posts/${newer.id}/`}>
+          <a class="prev" href={`/posts/${newer.id}/`}>
             <span>Newer</span>
             <b>{newer.data.title}</b>
+          </a>
+        )}
+        {older && (
+          <a class="next" href={`/posts/${older.id}/`}>
+            <span>Older</span>
+            <b>{older.data.title}</b>
           </a>
         )}
       </nav>
