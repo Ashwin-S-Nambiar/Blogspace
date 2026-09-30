@@ -6,7 +6,6 @@ import ProjectLink from '../../components/ProjectLink.astro';
 import Related from '../../components/Related.astro';
 import Base from '../../layouts/Base.astro';
 import { allPosts, formatDate, kindLabel, type Post, readTime, vt } from '../../lib/posts';
-import { site } from '../../site';
 import '../../styles/post.css';
 
 export async function getStaticPaths() {
@@ -36,7 +35,7 @@ const links = project && [
 ].filter((l): l is { href: string; label: string } => Boolean(l));
 ---
 
-<Base title={`${title} · ${site.name}`} description={dek} type="article" image={post.data.og?.src} imageAlt={title}>
+<Base title={title} description={dek} type="article" image={post.data.og?.src} imageAlt={title}>
   {sections.length > 0 && (
     <nav class="toc" aria-label="On this page">
       <p>On this page</p>
