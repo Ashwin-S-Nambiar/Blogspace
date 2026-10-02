@@ -20,7 +20,7 @@ const { tag } = Astro.params;
 const { posts } = Astro.props;
 ---
 
-<Base title={`${tagLabel(tag)} · ${site.name}`} description={`Write-ups tagged ${tagName(tag)} on ${site.name}.`}>
+<Base title={`${tagLabel(tag)} · ${site.name}`} description={`Write-ups tagged ${tagName(tag)} on ${site.name}.`} noindex>
   <section class="intro">
     <h1 data-in style="--i:1">{site.tagline}</h1>
   </section>

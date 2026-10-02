@@ -1,3 +1,4 @@
+import { copyFile } from 'node:fs/promises';
 import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 import { defineConfig, fontProviders } from 'astro/config';
@@ -18,7 +19,23 @@ const pair = (file: string, face: Face): [Variant, Variant] => [
 export default defineConfig({
   site: 'https://inspect.ashwin.co.in',
   trailingSlash: 'ignore',
-  integrations: [mdx(), sitemap()],
+  integrations: [
+    mdx(),
+    sitemap({
+      filter: (page) => {
+        const { pathname } = new URL(page);
+        return pathname === '/' || pathname.startsWith('/posts/');
+      },
+    }),
+    {
+      name: 'sitemap-alias',
+      hooks: {
+        'astro:build:done': async ({ dir }) => {
+          await copyFile(new URL('sitemap-index.xml', dir), new URL('sitemap.xml', dir));
+        },
+      },
+    },
+  ],
   prefetch: { prefetchAll: true, defaultStrategy: 'hover' },
   markdown: {
     shikiConfig: { theme: 'css-variables' },

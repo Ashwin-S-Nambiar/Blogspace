@@ -1,6 +1,21 @@
 {
   "headers": [
     {
+      "source": "/(.*)",
+      "missing": [
+        {
+          "type": "host",
+          "value": "inspect\\.ashwin\\.co\\.in"
+        }
+      ],
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
       "source": "/_astro/(.*)",
       "headers": [
         {
