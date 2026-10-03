@@ -17,7 +17,7 @@ interface Props {
 const {
   title,
   description,
-  image = '/og.jpg',
+  image = '/og.jpg?v=2',
   imageAlt = `${site.name}: ${site.tagline.toLowerCase()}`,
   type = 'website',
   noindex = false,
@@ -25,6 +25,7 @@ const {
 
 const canonical = new URL(`${Astro.url.pathname.replace(/\/$/, '')}/`, Astro.site);
 const ogImage = new URL(image, Astro.site);
+const projectCard = ogImage.pathname === '/og.jpg' || ogImage.pathname.startsWith('/og/posts/');
 const home = Astro.url.pathname === '/';
 ---
 
@@ -45,6 +46,9 @@ const home = Astro.url.pathname === '/';
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
     <meta property="og:image" content={ogImage} />
+    {projectCard && <meta property="og:image:type" content="image/jpeg" />}
+    {projectCard && <meta property="og:image:width" content="1200" />}
+    {projectCard && <meta property="og:image:height" content="630" />}
     <meta property="og:image:alt" content={imageAlt} />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />

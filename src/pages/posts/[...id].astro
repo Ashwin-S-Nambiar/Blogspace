@@ -4,6 +4,7 @@ import CodeCard from '../../components/CodeCard.astro';
 import Hero from '../../components/Hero.astro';
 import ProjectLink from '../../components/ProjectLink.astro';
 import Related from '../../components/Related.astro';
+import cards from '../../lib/og-cards.json';
 import Base from '../../layouts/Base.astro';
 import { allPosts, formatDate, kindLabel, type Post, readTime, vt } from '../../lib/posts';
 import '../../styles/post.css';
@@ -23,6 +24,7 @@ interface Props {
 }
 
 const { post, newer, older } = Astro.props;
+const articleCards: Record<string, string> = cards;
 const { Content, headings } = await render(post);
 const sections = headings.filter((h) => h.depth === 2);
 const { title, dek, date, updated, kind, project, hero } = post.data;
@@ -35,7 +37,7 @@ const links = project && [
 ].filter((l): l is { href: string; label: string } => Boolean(l));
 ---
 
-<Base title={title} description={dek} type="article" image={post.data.og?.src} imageAlt={title}>
+<Base title={title} description={dek} type="article" image={post.data.og?.src ?? articleCards[post.id]} imageAlt={title}>
   {sections.length > 0 && (
     <nav class="toc" aria-label="On this page">
       <p>On this page</p>

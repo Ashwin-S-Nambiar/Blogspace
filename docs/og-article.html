@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=1200">
+    <title>{{title}} · Inspect share image</title>
+    <style>
+      @font-face { font-family: Inter; src: url("../src/assets/fonts/inter-latin.woff2") format("woff2"); font-weight: 100 900; font-display: block; }
+      @font-face { font-family: "Geist Mono"; src: url("../src/assets/fonts/geist-mono-latin.woff2") format("woff2"); font-weight: 400 600; font-display: block; }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; width: 1200px; height: 630px; overflow: hidden; }
+      body { background: #fbfbfa; color: #171716; font-family: Inter, sans-serif; font-synthesis: none; -webkit-font-smoothing: antialiased; }
+      main { position: relative; width: 1200px; height: 630px; }
+      .copy { position: absolute; left: 72px; top: 50%; transform: translateY(-50%); width: 440px; }
+      .brand { display: flex; align-items: center; gap: 12px; font-size: 26px; font-weight: 700; }
+      .brand img { width: 36px; height: 36px; }
+      h1 { margin: 42px 0 20px; font-size: 43px; font-weight: 700; line-height: 1.12; letter-spacing: -.045em; }
+      p { margin: 0; color: #74746e; font-size: 20px; line-height: 1.5; }
+      .label { margin-top: 24px; color: #74746e; font-family: "Geist Mono", monospace; font-size: 11px; line-height: 1.5; letter-spacing: .03em; text-transform: uppercase; }
+      .visual { position: absolute; left: 554px; top: 128px; width: 574px; height: 374px; border: 5px solid #efefeb; border-radius: 22px; overflow: hidden; background: #fbfbfa; }
+      .visual img { display: block; width: 100%; height: 100%; object-fit: contain; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="copy">
+        <div class="brand"><img src="../public/icon.svg" alt="">Inspect</div>
+        <h1>{{title}}</h1>
+        <p>{{description}}</p>
+        <div class="label">{{label}}</div>
+      </div>
+      <div class="visual"><img src="{{image}}" alt="{{title}}"></div>
+    </main>
+  </body>
+</html>
