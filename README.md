@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://inspect.ashwin.co.in">
-    <img src="./public/og.jpg" width="100%" alt="inspect: the wordmark and the line write-ups on the things i build, beside a screenshot of a movie shelf with a blue selection box and handles around one poster">
+    <img src="./docs/screenshots/Inspect.webp" width="100%" alt="the home page on desktop: the inspect wordmark, a short intro, a writing list filtered by tag, and each post with a small thumbnail, its title, a line about it and the date">
   </a>
 </p>
 
@@ -9,18 +9,14 @@
   &nbsp;·&nbsp;
   <a href="#what-it-is">what it is</a>
   &nbsp;·&nbsp;
-  <a href="#writing-a-post">writing a post</a>
+  <a href="#the-design">the design</a>
   &nbsp;·&nbsp;
   <a href="#running-it">running it</a>
 </p>
 
 <br>
 
-<p align="center">
-  <img src="./docs/screenshots/Inspect.webp" width="100%" alt="the home page on desktop: the inspect wordmark, a short intro, a writing list filtered by tag, and each post with a small thumbnail, its title, a line about it and the date">
-</p>
-
-the source of **inspect**, write-ups on the things i build. one column, figures on stages, and notes that point at things the way a browser's inspector does: a blue box with handles, and its size.
+the source of **[inspect.ashwin.co.in](https://inspect.ashwin.co.in)**, write-ups on the things i build. one column, figures on stages, and notes that point at things the way a browser's inspector does: a blue box with handles, and its size.
 
 ## what it is
 
@@ -47,22 +43,39 @@ each post is the story of a project: why it changed, what went wrong, and the de
 - **quiet on purpose.** a near white page (`#fbfbfa`), grey text, and one blue (`#0a74e8`) for everything that points. dark mode follows your system, with no switch.
 - **type.** [inter](https://rsms.me/inter/) for everything, [newsreader](https://fonts.google.com/specimen/Newsreader) italic for the odd word in *italics*, and [geist mono](https://vercel.com/font) for dates, times and sizes.
 - **one column.** 620 px of text with figures the same width, and the contents in the left margin on wide screens.
-- **moving between pages.** only the title moves: it glides from its row into the post and back, with cross document view transitions. there is no client router.
-- **your place is kept.** going back restores the list's scroll before the first frame, so the title lands on its own row.
+- **moving between pages.** the title glides from its row into the post and back, with cross document view transitions. longer trips get a little more time, and titles outside the viewport fade instead of flying across the page. there is no client router.
+- **your place is kept.** going back restores the list's scroll before the first frame, so the title lands on its own row. the back link returns to the home or tag list you came from, even after jumping between headings; a direct visit falls back to home.
 - **nothing jumps.** fonts are self-hosted and preloaded with metric matched fallbacks, heroes and figures have their size before they load, and the page fades in once the fonts are ready. layout shift measures 0 on load and while you use the figures, on 11 sizes from a 320 px phone to a 2560 px monitor, light and dark.
 
-<details>
-<summary><strong>more screenshots</strong></summary>
+## the stack
 
-<br>
+| layer | choices |
+| --- | --- |
+| site | [astro 7](https://astro.build) with [mdx](https://mdxjs.com), fully static |
+| content | content collections, one folder per post, typed front matter |
+| images | `astro:assets`, as avif and webp at three widths |
+| fonts | the astro fonts api, self-hosted, with generated fallbacks |
+| motion | css, the web animations api, cross document view transitions |
+| feeds | [@astrojs/rss](https://docs.astro.build/en/recipes/rss/) and [@astrojs/sitemap](https://docs.astro.build/en/guides/integrations-guide/sitemap/) |
+| lint and format | [biome](https://biomejs.dev), with a pre-commit hook |
+| hosting | [vercel](https://vercel.com/), as static files |
 
-![a post on desktop: the contents on the left, and the title, date, dek and a hero clip with a selection box following a dvd case](./docs/screenshots/Inspect-2.webp)
+## running it
 
-![an annotated screenshot of four dice with a selection box around one held die, and its note highlighted in the list under it](./docs/screenshots/Inspect-3.webp)
+you'll need node 24.x, as required by `package.json`.
 
-![a clip on desktop with a selection box around an open dvd case, the timeline and five timed notes](./docs/screenshots/Inspect-4.webp)
+```sh
+git clone https://github.com/Ashwin-S-Nambiar/Inspect.git
+cd Inspect
+npm install
+npm run dev       # http://localhost:4321
+npm run build     # static site in dist/
+npm run check     # biome and astro check
+```
 
-</details>
+### hosting and indexing
+
+production indexing is configured for `inspect.ashwin.co.in`; vercel sends `noindex, nofollow` on other hosts, including preview deployments. the sitemap includes the home page and published posts; tag pages and the 404 are marked `noindex`. if you deploy under another domain, update the indexing headers and site urls along with it.
 
 ## writing a post
 
@@ -128,30 +141,6 @@ clips are h.264 mp4 without sound. a mark or cue without `w` and `h` is a number
 
 site settings live in [`src/site.ts`](src/site.ts): the name, the tag filters on the home page, and `thumbs`, which turns the list thumbnails on or off.
 
-## the stack
-
-| layer | choices |
-| --- | --- |
-| site | [astro 7](https://astro.build) with [mdx](https://mdxjs.com), fully static |
-| content | content collections, one folder per post, typed front matter |
-| images | `astro:assets`, as avif and webp at three widths |
-| fonts | the astro fonts api, self-hosted, with generated fallbacks |
-| motion | css, the web animations api, cross document view transitions |
-| feeds | [@astrojs/rss](https://docs.astro.build/en/recipes/rss/) and [@astrojs/sitemap](https://docs.astro.build/en/guides/integrations-guide/sitemap/) |
-| lint and format | [biome](https://biomejs.dev), with a pre-commit hook |
-| hosting | [vercel](https://vercel.com/), as static files |
-
-## running it
-
-```sh
-git clone https://github.com/Ashwin-S-Nambiar/Inspect.git
-cd Inspect
-npm install
-npm run dev       # http://localhost:4321
-npm run build     # static site in dist/
-npm run check     # biome and astro check
-```
-
 ## the shape of it
 
 ```
@@ -168,6 +157,19 @@ src/
   assets/fonts/       inter, newsreader italic and geist mono
 public/sw.js          retires the old app's service worker
 ```
+
+<details>
+<summary><strong>more screenshots</strong></summary>
+
+<br>
+
+![a post on desktop: the contents on the left, and the title, date, dek and a hero clip with a selection box following a dvd case](./docs/screenshots/Inspect-2.webp)
+
+![an annotated screenshot of four dice with a selection box around one held die, and its note highlighted in the list under it](./docs/screenshots/Inspect-3.webp)
+
+![a clip on desktop with a selection box around an open dvd case, the timeline and five timed notes](./docs/screenshots/Inspect-4.webp)
+
+</details>
 
 ---
 
