@@ -40,6 +40,24 @@ export default defineConfig({
   markdown: {
     shikiConfig: { theme: 'css-variables' },
   },
+  vite: {
+    build: {
+      rolldownOptions: {
+        onLog(level, log, defaultHandler) {
+          // Astro's propagated asset modules emit this build-time marker, which has no runtime
+          // semantics. Filter only this diagnostic until Astro stops emitting the directive.
+          if (
+            level === 'warn' &&
+            log.code === 'MODULE_LEVEL_DIRECTIVE' &&
+            log.message.includes('"use astro:head-inject"')
+          ) {
+            return;
+          }
+          defaultHandler(level, log);
+        },
+      },
+    },
+  },
   fonts: [
     {
       provider: fontProviders.local(),

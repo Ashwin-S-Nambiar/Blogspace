@@ -34,6 +34,6 @@
     "pre-commit": "npx --no -- biome check --staged --no-errors-on-unmatched || { echo 'Biome found issues in staged files. Run: npm run check:fix, then git add and commit again.'; exit 1; }"
   },
   "engines": {
-    "node": ">=22.12"
+    "node": "24.x"
   }
 }
